@@ -140,15 +140,15 @@ for each_iter in tqdm(range(whole_iter)):
                 average_rewards.append(reward_sum / (each_env + 1))
                 sum_rewards.append(reward_sum)
                 break
+        wandb.log({
+            'reward_sum': sum_rewards[-1],
+            'average_reward': average_rewards[-1]
+        })
     if each_iter % 10000 == 0:
         print('reward_sum;', sum_rewards[-1])
         print('average_reward;', average_rewards[-1])
     
-    wandb.log({
-        'reward_sum': sum_rewards[-1],
-        'average_reward': average_rewards[-1]
-    })
-    wandb.watch(policy)
+    # wandb.watch(policy)
     
     one_act = torch.tanh(policy(torch.from_numpy(one_obs).to(torch.float32).to(device)).sample()).to("cpu").numpy()
     next_one_obs, one_re, one_done, one_info = one_env.step(one_act)
