@@ -1,0 +1,24 @@
+{
+    "os": "Linux-4.4.0-148-generic-x86_64-with-glibc2.17",
+    "python": "3.8.12",
+    "heartbeatAt": "2022-01-20T07:33:15.406130",
+    "startedAt": "2022-01-20T07:33:13.704585",
+    "docker": null,
+    "gpu": "TITAN Xp",
+    "gpu_count": 4,
+    "cpu_count": 40,
+    "cuda": "10.0.130",
+    "args": [],
+    "state": "running",
+    "program": "train.py",
+    "codePath": "train.py",
+    "git": {
+        "remote": "https://github.com/kevin622/sac",
+        "commit": "3bebd37b638faddb58cd230521ec36266a8be53b"
+    },
+    "email": null,
+    "root": "/home/kookhyun/sac",
+    "host": "lim-b",
+    "username": "kookhyun",
+    "executable": "/home/kookhyun/anaconda3/envs/sac/bin/python"
+}
