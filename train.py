@@ -78,21 +78,15 @@ def loss_q2(q2, r_t, v_bar, discount=discount):
 ## policy
 optimizer_policy = Adam(policy.parameters(), lr=lr)
 # def loss_policy(s_t):
-def loss_policy(pi):
+def loss_policy(log_pi, q):
     # pi = policy(s_t)
-    a_t = torch.tanh(pi.sample())
-    new_st_at = torch.cat((s_t, a_t), dim=-1)
-    q1 = q_value_1(new_st_at)
-    q2 = q_value_2(new_st_at)
-    q = torch.min(q1, q2)
-    log_pi = pi.log_prob(a_t) - torch.sum(torch.log(1 - torch.square(torch.tanh(a_t))), dim=0)
+    # a_t = torch.tanh(pi.sample())
+    # new_st_at = torch.cat((s_t, a_t), dim=-1)
+    # q1 = q_value_1(new_st_at)
+    # q2 = q_value_2(new_st_at)
+    # q = torch.min(q1, q2)
+    # log_pi = pi.log_prob(a_t) - torch.sum(torch.log(1 - torch.square(torch.tanh(a_t))), dim=0)
     return -torch.mean(log_pi - q)
-
-def optimize_all():
-    optimizer_policy.zero_grad()
-    optimizer_q1.zero_grad()
-    optimizer_q2.zero_grad()
-    optimizer_value.zero_grad()
 
 # The Algorithm
 whole_iter = int(1e6)
@@ -162,15 +156,22 @@ for each_iter in tqdm(range(whole_iter)):
     for each_grad in range(whole_grad):
         s_t, a_t, r_t, s_t_1 = replay_buffer.random_sample(size=batch_size)
         pi = policy(s_t)
-        log_pi = pi.log_prob(a_t) - torch.sum(torch.log(1 - torch.square(torch.tanh(a_t))), dim=0)
+        # log_pi = pi.log_prob(a_t) - torch.sum(torch.log(1 - torch.square(torch.tanh(a_t))), dim=0)
         q1 = q_value_1(torch.cat((s_t, a_t), dim=-1))
         q2 = q_value_2(torch.cat((s_t, a_t), dim=-1))
         q = torch.min(q1, q2)
+
+        a_t_curr_policy = pi.sample()
+        log_pi_curr_policy = pi.log_prob(a_t_curr_policy) - torch.sum(torch.log(1 - torch.square(torch.tanh(a_t_curr_policy))), dim=0)
+        q1_curr_policy = q_value_1(torch.cat((s_t, a_t_curr_policy), dim=-1))
+        q2_curr_policy = q_value_2(torch.cat((s_t, a_t_curr_policy), dim=-1))
+        q_curr_policy = torch.min(q1_curr_policy, q2_curr_policy)
+        
         v = value(s_t)
         v_bar = value_bar(s_t_1)
 
 
-        loss = loss_value(v, q, log_pi)
+        loss = loss_value(v, q_curr_policy, log_pi_curr_policy)
         optimizer_value.zero_grad()
         loss.backward(retain_graph=True)
         optimizer_value.step()
@@ -185,7 +186,12 @@ for each_iter in tqdm(range(whole_iter)):
         loss.backward(retain_graph=True)
         optimizer_q2.step()
         
-        loss = loss_policy(pi)
+        # Evaluate the q again, since updated
+        q1_curr_policy = q_value_1(torch.cat((s_t, a_t_curr_policy), dim=-1))
+        q2_curr_policy = q_value_2(torch.cat((s_t, a_t_curr_policy), dim=-1))
+        q_curr_policy = torch.min(q1_curr_policy, q2_curr_policy)
+
+        loss = loss_policy(log_pi_curr_policy, q_curr_policy)
         optimizer_policy.zero_grad()
         loss.backward(retain_graph=True)
         optimizer_policy.step()
