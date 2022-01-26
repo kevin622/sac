@@ -10,7 +10,7 @@ This repository is for implementation of [Soft Actor-Critic: Off-Policy Maximum 
 When specifying GPU, 
 ```bash
 CUDA_VISIBLE_DEVICES=1,2 python train.py
-CUDA_VISIBLE_DEVICES=1,2 python main.py
+CUDA_VISIBLE_DEVICES=1,2 python main.py --buffer_size 1000
 ```
 
 

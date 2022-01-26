@@ -62,6 +62,7 @@ class ReplayBuffer:
                     self.append([observations[i], actions[i], rewards[i], new_observations[i], dones[i]])
                 observations = new_observations
             print('Done!')
+            self.save()
 
     def random_sample(self, size):
         indices = random.sample(range(len(self)), k=size)
