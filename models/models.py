@@ -64,8 +64,7 @@ class Policy(nn.Module):
         actions = torch.tanh(sample)
         log_prob = distribution.log_prob(sample)
         log_prob -= torch.log(1 - torch.tanh(sample).pow(2))
-        # print(log_prob)
-        log_prob = log_prob.sum(1, keepdim=True)
+        log_prob = log_prob.sum(-1, keepdim=True)
         return actions, log_prob
 
 # if __name__ == "__main__":

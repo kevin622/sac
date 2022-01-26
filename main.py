@@ -4,6 +4,7 @@ import wandb
 import torch
 import gym
 from stable_baselines3.common.env_util import make_vec_env
+from tqdm import tqdm
 
 from sac import SAC
 from replay_buffer import ReplayBuffer
@@ -57,7 +58,6 @@ def main():
     eval_env = gym.make(id=args.env_name) # Env that will be used for evaluation of the process
 
     # Agent
-    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     agent = SAC(device=device, args=args, env=env)
 
     # Weights and Biases(logging)
@@ -82,7 +82,7 @@ def main():
     # Training Loop
     env = make_vec_env(args.env_name, 1)
     state = env.reset()
-    for ith_iter in range(1, args.num_iter + 1):
+    for ith_iter in tqdm(range(1, args.num_iter + 1)):
         action = agent.get_action(state=to_tensor(state))
         next_state, reward, done, _ = env.step(action)
         # How can I ignore done being True due to hitting the time horizon
@@ -106,8 +106,8 @@ def main():
             eval_state = eval_env.reset()
             sum_reward = 0
             for ith_env_step in range(args.max_env_step):
-                eval_action = agent.policy.sample(eval_state)
-                eval_next_state, eval_reward, eval_done, _ =  eval_env.step(eval_action)
+                eval_action = agent.policy.sample(to_tensor(eval_state))[0]
+                eval_next_state, eval_reward, eval_done, _ =  eval_env.step(to_numpy(eval_action))
                 sum_reward += eval_reward
                 if eval_done:
                     break

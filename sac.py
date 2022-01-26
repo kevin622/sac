@@ -20,10 +20,10 @@ class SAC(object):
         self.q1_network = QNetwork(input_size=(state_shape + action_shape)).to(device)
         self.q1_optim = Adam(self.q1_network.parameters(), lr=args.lr)
         self.q2_network = QNetwork(input_size=(state_shape + action_shape)).to(device)
-        self.q1_optim = Adam(self.q2_network.parameters(), lr=args.lr)
-        self.value_network = ValueNetwork(input_size=state_shape)
+        self.q2_optim = Adam(self.q2_network.parameters(), lr=args.lr)
+        self.value_network = ValueNetwork(input_size=state_shape).to(device)
         self.value_optim = Adam(self.value_network.parameters(), lr=args.lr)
-        self.value_avg_network = ValueNetwork(input_size=state_shape)
+        self.value_avg_network = ValueNetwork(input_size=state_shape).to(device)
         self.value_avg_network.load_state_dict(self.value_network.state_dict())
 
     def get_action(self, state):
@@ -65,9 +65,9 @@ class SAC(object):
         self.q2_optim.step()
 
         # Update Policy
-        actions, log_prob = self.policy.sample()
-        Q1_st_at = self.q1_network(torch.cat(state_batch, actions), dim=-1)
-        Q2_st_at = self.q2_network(torch.cat(state_batch, actions), dim=-1)
+        actions, log_prob = self.policy.sample(state_batch)
+        Q1_st_at = self.q1_network(torch.cat((state_batch, actions), dim=-1))
+        Q2_st_at = self.q2_network(torch.cat((state_batch, actions), dim=-1))
         Q_st_at = torch.min(Q1_st_at, Q2_st_at)
         policy_loss = torch.mean(log_prob - Q_st_at)
 

@@ -11,7 +11,6 @@ When specifying GPU,
 ```bash
 CUDA_VISIBLE_DEVICES=1,2 python train.py
 CUDA_VISIBLE_DEVICES=1,2 python main.py
-
 ```
 
 

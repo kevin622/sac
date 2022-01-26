@@ -37,17 +37,17 @@ class ReplayBuffer:
         state_shape = env.observation_space.shape[0]
         action_shape = env.action_space.shape[0]
         self.memory = [
-            torch.zeros((size, state_shape)),
+            torch.zeros((size, state_shape)).to(device),
             torch.zeros((
                 size,
                 action_shape,
-            )),
-            torch.zeros((size, )),
+            )).to(device),
+            torch.zeros((size, 1)).to(device),
             torch.zeros((
                 size,
                 state_shape,
-            )),
-            torch.zeros((size, ))
+            )).to(device),
+            torch.zeros((size, 1)).to(device)
         ]  # s, a, r, s_prime, done
         self.change_idx = 0
 
@@ -60,7 +60,7 @@ class ReplayBuffer:
         '''
 
         for i, c in enumerate(content):
-            self.memory[i][self.change_idx] = torch.tensor(c)
+            self.memory[i][self.change_idx] = torch.tensor(c).to(self.device)
 
         # Update next location to change
         self.change_idx += 1
