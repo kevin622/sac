@@ -55,7 +55,10 @@ class ReplayBuffer:
         return self.size
 
     def append(self, content):
-        # content : s, a, r, s_prime, done
+        '''
+        content : s, a, r, s_prime, done
+        '''
+
         for i, c in enumerate(content):
             self.memory[i][self.change_idx] = torch.tensor(c)
 
@@ -64,7 +67,8 @@ class ReplayBuffer:
         if self.change_idx == self.size:
             self.change_idx = 0
 
-    def generate_data(self, policy):
+    # def generate_data(self, policy):
+    def generate_data(self):
         env = self.env
         observations = env.reset()
         n_envs = env.num_envs
@@ -73,7 +77,7 @@ class ReplayBuffer:
             # actions = torch.tanh(
             #     policy(torch.from_numpy(observations).to(torch.float32).to(
             #         self.device)).sample()).to("cpu").numpy()
-            actions = env.action_space.sample()
+            actions = np.stack([env.action_space.sample() for _ in range(n_envs)])
             new_observations, rewards, dones, infos = env.step(actions)
             for i in range(n_envs):
                 # s, a, r, s_prime, done

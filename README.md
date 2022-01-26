@@ -5,6 +5,15 @@
 # SAC(Soft Actor Critic) Implementation
 
 This repository is for implementation of [Soft Actor-Critic: Off-Policy Maximum Entropy Deep Reinforcement Learning with a Stochastic Actor](https://arxiv.org/abs/1801.01290).
+## How to train
+
+When specifying GPU, 
+```bash
+CUDA_VISIBLE_DEVICES=1,2 python train.py
+CUDA_VISIBLE_DEVICES=1,2 python main.py
+
+```
+
 
 ## About the paper
 
