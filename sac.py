@@ -15,14 +15,18 @@ class SAC(object):
         action_shape = env.action_space.shape[0]
         
         # Neural Nets
+        # Policy
         self.policy = Policy(input_size=state_shape, output_size=action_shape).to(device)
         self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
+        # Q values
         self.q1_network = QNetwork(input_size=(state_shape + action_shape)).to(device)
         self.q1_optim = Adam(self.q1_network.parameters(), lr=args.lr)
         self.q2_network = QNetwork(input_size=(state_shape + action_shape)).to(device)
         self.q2_optim = Adam(self.q2_network.parameters(), lr=args.lr)
+        # Value
         self.value_network = ValueNetwork(input_size=state_shape).to(device)
         self.value_optim = Adam(self.value_network.parameters(), lr=args.lr)
+        # Value Exponential Average
         self.value_avg_network = ValueNetwork(input_size=state_shape).to(device)
         self.value_avg_network.load_state_dict(self.value_network.state_dict())
 
@@ -42,7 +46,7 @@ class SAC(object):
         curr_policy_Q1_st_at = self.q1_network(torch.cat((state_batch, curr_policy_action_batch), dim=-1))
         curr_policy_Q2_st_at = self.q2_network(torch.cat((state_batch, curr_policy_action_batch), dim=-1))
         curr_policy_Q_st_at = torch.min(curr_policy_Q1_st_at, curr_policy_Q2_st_at)
-        value_loss = F.mse_loss(V_st, curr_policy_Q_st_at + curr_policy_log_prob)
+        value_loss = F.mse_loss(V_st, curr_policy_Q_st_at - curr_policy_log_prob)
 
         self.value_optim.zero_grad()
         value_loss.backward()
