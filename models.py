@@ -61,7 +61,9 @@ class Policy(nn.Module):
         log_prob = normal.log_prob(sample)
         log_prob -= torch.log(1 - action.pow(2))
         log_prob = log_prob.sum(-1, keepdim=True)
-        return action, log_prob
+
+        mean_action = torch.tanh(mean)
+        return action, log_prob, mean_action
 
         
 

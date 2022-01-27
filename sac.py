@@ -45,7 +45,7 @@ class SAC(object):
         
         # Update Value
         V_st = self.value_network(state_batch)
-        curr_policy_action_batch, curr_policy_log_prob = self.policy.sample(state_batch)
+        curr_policy_action_batch, curr_policy_log_prob, _ = self.policy.sample(state_batch)
         curr_policy_Q1_st_at = self.q1_network(torch.cat((state_batch, curr_policy_action_batch), dim=-1))
         curr_policy_Q2_st_at = self.q2_network(torch.cat((state_batch, curr_policy_action_batch), dim=-1))
         curr_policy_Q_st_at = torch.min(curr_policy_Q1_st_at, curr_policy_Q2_st_at)
@@ -73,7 +73,7 @@ class SAC(object):
         self.q2_optim.step()
 
         # Update Policy
-        actions, log_prob = self.policy.sample(state_batch)
+        actions, log_prob, _ = self.policy.sample(state_batch)
         Q1_st_at = self.q1_network(torch.cat((state_batch, actions), dim=-1))
         Q2_st_at = self.q2_network(torch.cat((state_batch, actions), dim=-1))
         Q_st_at = torch.min(Q1_st_at, Q2_st_at)

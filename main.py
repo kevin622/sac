@@ -110,7 +110,7 @@ def main():
             eval_state = eval_env.reset()
             sum_reward = 0
             for ith_env_step in range(args.max_env_step):
-                eval_action = agent.policy.sample(to_tensor(eval_state))[0]
+                eval_action = agent.policy.sample(to_tensor(eval_state))[2]
                 eval_next_state, eval_reward, eval_done, _ =  eval_env.step(to_numpy(eval_action))
                 sum_reward += eval_reward
                 if eval_done:
