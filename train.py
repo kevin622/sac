@@ -8,7 +8,7 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import wandb
 
-from models.models import Value, Q_value, Policy
+from models import Value, Q_value, Policy
 from data_generation.data_generation import ReplayBuffer
 from utils import device, to_numpy, to_tensor
 

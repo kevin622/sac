@@ -1,7 +1,6 @@
 import random
 import numpy as np
 
-
 class ReplayBuffer:
     def __init__(self, size, device):
         self.size = size

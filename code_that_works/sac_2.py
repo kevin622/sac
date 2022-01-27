@@ -1,7 +1,7 @@
 import torch
 from torch.optim import Adam
 import torch.nn.functional  as F
-from models.models_2 import Policy, QNetwork
+from models_2 import Policy, QNetwork
 from data_generation.data_generation import ReplayBuffer
 from utils import to_numpy, to_tensor
 
