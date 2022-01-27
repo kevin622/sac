@@ -1,5 +1,8 @@
 import torch
+from torch.nn import Linear
+from models.models import Policy
+import gym
 
-# t = torch.tensor([1., 2., 3.])
-t = torch.load('temp.pt')
-print(t)
+a = gym.make("Hopper-v2")
+print(dir(a))
+print(a._max_episode_steps)

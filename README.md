@@ -1,5 +1,9 @@
-[toc]
-
+Changed Things after clone coding
+1. `replay_buffer.py` : changed memory to list
+2. `models.py` : not using `ValueNetwork`, used xavier initialization, made `Q_network` output 2 values(Q1, Q2), applied clamping in policy std, `log_prob.sum` dimension change(-1 => 1)
+3. `sac.py` : added alpha, used unsqueeze to reward and mask, used unsqueeze in input policy(for the `sum` dimesion change in `models.py`)
+    By not using Value, the parameter update part has changed totally.
+4. `main.py` : added alpha in args, `done` shouldn't be multiplied. Rather `not done` should be.(_This might have been a big problem!!!_)
 
 
 # SAC(Soft Actor Critic) Implementation
@@ -11,6 +15,7 @@ When specifying GPU,
 ```bash
 CUDA_VISIBLE_DEVICES=1,2 python train.py
 CUDA_VISIBLE_DEVICES=1,2 python main.py --buffer_size 1000
+CUDA_VISIBLE_DEVICES=1,2 python main_2.py
 ```
 
 
