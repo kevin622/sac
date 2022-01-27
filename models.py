@@ -3,6 +3,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.distributions.normal import Normal
 
+LOG_SIG_MAX = 2
+LOG_SIG_MIN = -20
+
 class ValueNetwork(nn.Module):
     def __init__(self, input_size, output_size=1):
         super(ValueNetwork, self).__init__()
@@ -45,6 +48,7 @@ class Policy(nn.Module):
         x = F.relu(self.fc2(x))
         mean = self.fc_mean(x)
         log_std = self.fc_log_std(x)
+        log_std = torch.clamp(log_std, min=LOG_SIG_MAX, max=LOG_SIG_MAX)
         return mean, log_std
 
     def sample(self, state):
