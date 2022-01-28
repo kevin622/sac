@@ -11,6 +11,8 @@ After fixing the `done batch problem` the algo seems to converge, but the gradie
 - Tried (log_prob-Q).mean() instead torch.mean(log_prob-Q)
 - Tried using detach in replay_buffer.sample
 - Tried Q network output two Qs
+- Tried not using Value
+- added Epsilon in policy torch.log() `models.py` => Problem solved!
 
 
 

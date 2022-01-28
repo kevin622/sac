@@ -38,9 +38,9 @@ def main():
                         type=float,
                         help="Temperature parameter for entropy importance (default: 0.2)")
     parser.add_argument("--num_iter",
-                        default=int(1e6),
+                        default=int(1e5),
                         type=int,
-                        help="Number of the Training Iteration (default: 1000000)")
+                        help="Number of the Training Iteration (default: 100000)")
     parser.add_argument("--max_env_step",
                         default=1000,
                         type=int,
@@ -69,19 +69,19 @@ def main():
     agent = SAC(device=device, args=args, env=env)
 
     # Weights and Biases(logging)
-    # wandb.init(project="sac_2", entity="kevin622")
-    # wandb.config = {
-    #     "env_name": args.env_name,
-    #     "env_nums": args.env_nums,
-    #     "buffer_size": args.buffer_size,
-    #     "lr": args.lr,
-    #     "gamma": args.gamma,
-    #     "num_iter": args.num_iter,
-    #     "max_env_step": args.max_env_step,
-    #     "num_grad_step": args.num_grad_step,
-    #     "batch_size": args.batch_size,
-    #     "tau": args.tau,
-    # }
+    wandb.init(project="sac_2", entity="kevin622")
+    wandb.config = {
+        "env_name": args.env_name,
+        "env_nums": args.env_nums,
+        "buffer_size": args.buffer_size,
+        "lr": args.lr,
+        "gamma": args.gamma,
+        "num_iter": args.num_iter,
+        "max_env_step": args.max_env_step,
+        "num_grad_step": args.num_grad_step,
+        "batch_size": args.batch_size,
+        "tau": args.tau,
+    }
 
     # Replay Buffer
     replay_buffer = ReplayBuffer(device=device, env=env, args=args)
@@ -101,33 +101,41 @@ def main():
         for ith_grad_step in range(args.num_grad_step):
             value_loss, Q1_loss, Q2_loss, policy_loss = agent.update_parameters(
                 memory=replay_buffer, batch_size=args.batch_size)
-            # wandb.log({
-            #     'value_loss': value_loss,
-            #     'Q1_loss': Q1_loss,
-            #     'Q2_loss': Q2_loss,
-            #     'policy_loss': policy_loss
-            # })
+            wandb.log({
+                'value_loss': value_loss,
+                'Q1_loss': Q1_loss,
+                'Q2_loss': Q2_loss,
+                'policy_loss': policy_loss
+            })
 
         if ith_iter % 100 == 0:
             '''
             For every 100 step, evaluate the policy by rolling it out
+            Use average of 10 episodes
             '''
-            eval_state = eval_env.reset()
-            sum_reward = 0
-            for ith_env_step in range(args.max_env_step):
-                eval_action = agent.policy.sample(to_tensor(eval_state))[2]
-                eval_next_state, eval_reward, eval_done, _ = eval_env.step(to_numpy(eval_action))
-                sum_reward += eval_reward[0]
-                if eval_done:
-                    break
-                eval_state = eval_next_state
-            cnt_env_step = ith_env_step + 1
-            # wandb.log({
-            #     "sum_reward": sum_reward,
-            #     "avg_reward": sum_reward / cnt_env_step,
-            # })
+            sum_reward_list = []
+            cnt_env_step_list = []
+            for _ in range(10):
+                eval_state = eval_env.reset()
+                sum_reward = 0
+                for ith_env_step in range(args.max_env_step):
+                    eval_action = agent.policy.sample(to_tensor(eval_state))[2]
+                    eval_next_state, eval_reward, eval_done, _ = eval_env.step(to_numpy(eval_action))
+                    sum_reward += eval_reward[0]
+                    if eval_done:
+                        break
+                    eval_state = eval_next_state
+                cnt_env_step = ith_env_step + 1
+                sum_reward_list.append(sum_reward)
+                cnt_env_step_list.append(cnt_env_step)
+            avg_sum_reward = sum(sum_reward_list) / len(sum_reward_list)
+            avg_cnt_env_step = sum(cnt_env_step_list) / len(cnt_env_step_list)
+            wandb.log({
+                "sum_reward": avg_sum_reward,
+                "episode_length": avg_cnt_env_step,
+            })
             print(
-                f'Iteration: {ith_iter}, Sum of Reward: {round(sum_reward, 2)}, Length of Episode: {cnt_env_step}'
+                f'Iteration: {ith_iter}, Sum of Reward: {round(avg_sum_reward, 2)}, Length of Episode: {avg_cnt_env_step} (10 episode average)'
             )
 
 

@@ -5,6 +5,7 @@ from torch.distributions.normal import Normal
 
 LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
+epsilon = 1e-6
 
 # Initialize Policy weights
 def weights_init_(m):
@@ -45,6 +46,7 @@ class QNetwork(nn.Module):
         x1 = F.relu(self.fc1(x))
         x1 = F.relu(self.fc2(x1))
         x1 = self.fc3(x1)
+
         x2 = F.relu(self.fc4(x))
         x2 = F.relu(self.fc5(x2))
         x2 = self.fc6(x2)
@@ -77,7 +79,7 @@ class Policy(nn.Module):
         action = torch.tanh(sample)
 
         log_prob = normal.log_prob(sample)
-        log_prob -= torch.log(1 - action.pow(2))
+        log_prob -= torch.log(1 - action.pow(2) + epsilon)
         log_prob = log_prob.sum(1, keepdim=True)
 
         mean_action = torch.tanh(mean)

@@ -9,12 +9,12 @@ from tqdm import tqdm
 
 class ReplayBuffer:
     def __init__(self, device, env, args):
+        random.seed(args.seed)
         self.device = device
         self.size = args.buffer_size
         self.env = env
         self.env_name = args.env_name
         
-        random.seed(args.seed)
         state_shape = env.observation_space.shape[0]
         action_shape = env.action_space.shape[0]
         self.memory = [
@@ -55,7 +55,7 @@ class ReplayBuffer:
             env = self.env
             observations = env.reset()
             n_envs = env.num_envs
-            print('Generating Dataset')
+            print('Generating Random Transition Dataset')
             for _ in tqdm(range(self.size // n_envs)):
                 actions = np.stack([env.action_space.sample() for _ in range(n_envs)])
                 new_observations, rewards, dones, infos = env.step(actions)

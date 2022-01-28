@@ -28,7 +28,8 @@ class SAC(object):
         self.value_optim = Adam(self.value_network.parameters(), lr=args.lr)
         # Value Exponential Average
         self.value_avg_network = ValueNetwork(input_size=state_shape).to(device)
-        self.value_avg_network.load_state_dict(self.value_network.state_dict())
+        for target_parm, param in zip(self.value_avg_network.parameters(), self.value_network.parameters()):
+            target_parm.data.copy_(param.data)
 
     def get_action(self, state):
         action = self.policy.sample(state)[0]
@@ -65,7 +66,7 @@ class SAC(object):
         Q_loss = Q1_loss + Q2_loss
 
         self.q_optim.zero_grad()
-        Q1_loss.backward()
+        Q_loss.backward()
         self.q_optim.step()
 
         # Update Policy
