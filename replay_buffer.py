@@ -8,24 +8,27 @@ from tqdm import tqdm
 
 
 class ReplayBuffer:
-    def __init__(self, size, device, env):
-        self.size = size
+    def __init__(self, device, env, args):
         self.device = device
+        self.size = args.buffer_size
         self.env = env
+        self.env_name = args.env_name
+        
+        random.seed(args.seed)
         state_shape = env.observation_space.shape[0]
         action_shape = env.action_space.shape[0]
         self.memory = [
-            torch.zeros((size, state_shape)).to(device),
+            torch.zeros((self.size, state_shape)).to(device),
             torch.zeros((
-                size,
+                self.size,
                 action_shape,
             )).to(device),
-            torch.zeros((size, 1)).to(device),
+            torch.zeros((self.size, 1)).to(device),
             torch.zeros((
-                size,
+                self.size,
                 state_shape,
             )).to(device),
-            torch.zeros((size, 1)).to(device)
+            torch.zeros((self.size, 1)).to(device)
         ]  # s, a, r, s_prime, done
         self.change_idx = 0
 
@@ -46,7 +49,7 @@ class ReplayBuffer:
 
     # def generate_data(self, policy):
     def generate_data(self):
-        if os.path.exists('checkpoints/replay_buffer.pt'):
+        if os.path.exists(f'checkpoints/replay_buffer_{self.env_name}_{self.size}.pt'):
             self.load()
         else:
             env = self.env
@@ -65,22 +68,22 @@ class ReplayBuffer:
 
     def random_sample(self, size):
         indices = random.sample(range(len(self)), k=size)
-        states = self.memory[0][indices].to(self.device)
-        actions = self.memory[1][indices].to(self.device)
-        rewards = self.memory[2][indices].to(self.device)
-        next_states = self.memory[3][indices].to(self.device)
-        dones = self.memory[4][indices].to(self.device)
+        states = self.memory[0][indices].detach().to(self.device)
+        actions = self.memory[1][indices].detach().to(self.device)
+        rewards = self.memory[2][indices].detach().to(self.device)
+        next_states = self.memory[3][indices].detach().to(self.device)
+        dones = self.memory[4][indices].detach().to(self.device)
         return states, actions, rewards, next_states, dones
     
     def save(self):
         if not os.path.exists("checkpoints/"):
             os.makedirs('checkpoints/')
-        torch.save(self.memory, 'checkpoints/replay_buffer.pt')
+        torch.save(self.memory, f'checkpoints/replay_buffer_{self.env_name}_{self.size}.pt')
         print('Saving Memory in checkpoints/replay_buffer.pt')
 
     def load(self):
-        print('Loading existing data from checkpoints/replay_buffer.pt')
-        self.memory = torch.load('checkpoints/replay_buffer.pt', map_location=self.device)
+        print(f'Loading existing data from checkpoints/replay_buffer_{self.env_name}_{self.size}.pt')
+        self.memory = torch.load(f'checkpoints/replay_buffer_{self.env_name}_{self.size}.pt', map_location=self.device)
         print('Loading complete!')
         print(f'Tensor size {len(self.memory[0])}')
         self.change_idx = 0

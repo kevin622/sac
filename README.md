@@ -3,7 +3,16 @@ Changed Things after clone coding
 2. `models.py` : not using `ValueNetwork`, used xavier initialization, made `Q_network` output 2 values(Q1, Q2), applied clamping in policy std, `log_prob.sum` dimension change(-1 => 1)
 3. `sac.py` : added alpha, used unsqueeze to reward and mask, used unsqueeze in input policy(for the `sum` dimesion change in `models.py`)
     By not using Value, the parameter update part has changed totally.
-4. `main.py` : added alpha in args, `done` shouldn't be multiplied. Rather `not done` should be.(_This might have been a big problem!!!_)
+4. `main.py` : added alpha in args, `done` shouldn't be multiplied. Rather `not done` should be.
+
+After fixing the `done batch problem` the algo seems to converge, but the gradients explode at some time step(5minutes ~ 20minutes). Finding for the reason
+- tried adding `torch.no_grad()`
+- tried `xavier uniform initialization`
+- Tried (log_prob-Q).mean() instead torch.mean(log_prob-Q)
+- Tried using detach in replay_buffer.sample
+- Tried Q network output two Qs
+
+
 
 
 # SAC(Soft Actor Critic) Implementation

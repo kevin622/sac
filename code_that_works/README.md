@@ -5,5 +5,5 @@ The codes in this folder are those that were confirmed to work on `Hopper-v2` en
 Usage
 ```bash
 cd code_that_works
-python main_2.py
+CUDA_VISIBLE_DEVICES=1,2 python main_2.py
 ```

@@ -4,7 +4,7 @@ import wandb
 import torch
 import gym
 from stable_baselines3.common.env_util import make_vec_env
-from tqdm import tqdm
+import numpy as np
 
 from sac import SAC
 from replay_buffer import ReplayBuffer
@@ -50,6 +50,7 @@ def main():
                         type=int,
                         help="Number of Gradient Steps for each Iteration (default: 1)")
     parser.add_argument("--batch_size", default=256, help="Size of a Batch (default: 256)")
+    parser.add_argument("--seed", default=123456, help="Random Seed (default: 123456)")
     parser.add_argument(
         "--tau",
         default=0.005,
@@ -57,51 +58,55 @@ def main():
         "Target Value Smoothing Constant. Large tau can lead to instabilities while small tau can make training slower. (default: 0.005)"
     )
     args = parser.parse_args()
-
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+    
     env = make_vec_env(args.env_name, n_envs=args.env_nums)
-    eval_env = gym.make(id=args.env_name) # Env that will be used for evaluation of the process
-
+    env.seed(args.seed)
+    eval_env = make_vec_env(env_id=args.env_name, n_envs=1)  # Env that will be used for evaluation of the process
+    eval_env.seed(args.seed)
     # Agent
     agent = SAC(device=device, args=args, env=env)
 
     # Weights and Biases(logging)
-    wandb.init(project="sac_2", entity="kevin622")
-    wandb.config = {
-        "env_name" : args.env_name,
-        "env_nums" : args.env_nums,
-        "buffer_size" : args.buffer_size,
-        "lr" : args.lr,
-        "gamma" : args.gamma,
-        "num_iter" : args.num_iter,
-        "max_env_step" : args.max_env_step,
-        "num_grad_step" : args.num_grad_step,
-        "batch_size" : args.batch_size,
-        "tau" : args.tau,
-    }
+    # wandb.init(project="sac_2", entity="kevin622")
+    # wandb.config = {
+    #     "env_name": args.env_name,
+    #     "env_nums": args.env_nums,
+    #     "buffer_size": args.buffer_size,
+    #     "lr": args.lr,
+    #     "gamma": args.gamma,
+    #     "num_iter": args.num_iter,
+    #     "max_env_step": args.max_env_step,
+    #     "num_grad_step": args.num_grad_step,
+    #     "batch_size": args.batch_size,
+    #     "tau": args.tau,
+    # }
 
     # Replay Buffer
-    replay_buffer = ReplayBuffer(size=args.buffer_size, device=device, env=env)
+    replay_buffer = ReplayBuffer(device=device, env=env, args=args)
     replay_buffer.generate_data()
 
     # Training Loop
     env = make_vec_env(args.env_name, 1)
+    env.seed(args.seed)
+    
     state = env.reset()
-    for ith_iter in tqdm(range(1, args.num_iter + 1)):
+    for ith_iter in range(1, args.num_iter + 1):
         action = agent.get_action(state=to_tensor(state))
         next_state, reward, done, _ = env.step(action)
-        # How can I ignore done being True due to hitting the time horizon
-        # in Vectorized Env?
         replay_buffer.append([state, action, reward, next_state, done])
         state = next_state
 
         for ith_grad_step in range(args.num_grad_step):
-            value_loss, Q1_loss, Q2_loss, policy_loss = agent.update_parameters(memory=replay_buffer, batch_size=args.batch_size)
-            wandb.log({
-                'value_loss' : value_loss, 
-                'Q1_loss' : Q1_loss, 
-                'Q2_loss' : Q2_loss, 
-                'policy_loss' : policy_loss
-            })
+            value_loss, Q1_loss, Q2_loss, policy_loss = agent.update_parameters(
+                memory=replay_buffer, batch_size=args.batch_size)
+            # wandb.log({
+            #     'value_loss': value_loss,
+            #     'Q1_loss': Q1_loss,
+            #     'Q2_loss': Q2_loss,
+            #     'policy_loss': policy_loss
+            # })
 
         if ith_iter % 100 == 0:
             '''
@@ -111,16 +116,19 @@ def main():
             sum_reward = 0
             for ith_env_step in range(args.max_env_step):
                 eval_action = agent.policy.sample(to_tensor(eval_state))[2]
-                eval_next_state, eval_reward, eval_done, _ =  eval_env.step(to_numpy(eval_action))
-                sum_reward += eval_reward
+                eval_next_state, eval_reward, eval_done, _ = eval_env.step(to_numpy(eval_action))
+                sum_reward += eval_reward[0]
                 if eval_done:
                     break
                 eval_state = eval_next_state
             cnt_env_step = ith_env_step + 1
-            wandb.log({
-                "sum_reward": sum_reward,
-                "avg_reward": sum_reward / cnt_env_step,
-            })
+            # wandb.log({
+            #     "sum_reward": sum_reward,
+            #     "avg_reward": sum_reward / cnt_env_step,
+            # })
+            print(
+                f'Iteration: {ith_iter}, Sum of Reward: {round(sum_reward, 2)}, Length of Episode: {cnt_env_step}'
+            )
 
 
 if __name__ == "__main__":
