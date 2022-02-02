@@ -1,13 +1,7 @@
-from models import Policy as P1
-from code_that_works.models_2 import Policy as P2
-import torch
+from stable_baselines3.common.env_util import make_vec_env
+import gym
 
-p1 = P1(3, 3)
-p2 = P2(3, 3)
-p2.load_state_dict(p1.state_dict())
-
-print(p1.sample(torch.tensor([[1., 2., 3.]])))
-print(p2.sample(torch.tensor([[1., 2., 3.]])))
-
-import numpy as np
-a = np.array([1,2])
+# env = make_vec_env("Hopper-v2", n_envs=2)
+env = gym.make("Hopper-v2")
+print(dir(env))
+print(env._max_episode_steps)

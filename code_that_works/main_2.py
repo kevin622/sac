@@ -40,15 +40,15 @@ def main():
     parser.add_argument("--num_step",
                         default=int(1e6),
                         type=int,
-                        help="Number of the steps for whole training (default: 1000000)")
+                        help="Number of the steps for whole training (default: 1,000,000)")
     parser.add_argument("--start_step",
                         default=int(1e4),
                         type=int,
-                        help="Number of the random steps (default: 10000)")
+                        help="Number of the random steps (default: 10,000)")
     parser.add_argument("--max_env_step",
                         default=1000,
                         type=int,
-                        help="Max length of the Environment Step (default: 1000)")
+                        help="Max length of the Environment Step (default: 1,000)")
     parser.add_argument("--num_grad_step",
                         default=1,
                         type=int,

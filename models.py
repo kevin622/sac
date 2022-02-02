@@ -29,25 +29,26 @@ class ValueNetwork(nn.Module):
 
 
 class QNetwork(nn.Module):
-    def __init__(self, input_size, output_size=1):
+    def __init__(self, num_state, num_action):
         super(QNetwork, self).__init__()
         # Q1
-        self.fc1 = nn.Linear(input_size, 256)
+        self.fc1 = nn.Linear(num_state + num_action, 256)
         self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, output_size)
+        self.fc3 = nn.Linear(256, 1)
         
         # Q2
-        self.fc4 = nn.Linear(input_size, 256)
+        self.fc4 = nn.Linear(num_state + num_action, 256)
         self.fc5 = nn.Linear(256, 256)
-        self.fc6 = nn.Linear(256, output_size)
+        self.fc6 = nn.Linear(256, 1)
 
     
-    def forward(self, x):
-        x1 = F.relu(self.fc1(x))
+    def forward(self, state, action):
+        x_input = torch.cat((state, action), dim=1)
+        x1 = F.relu(self.fc1(x_input))
         x1 = F.relu(self.fc2(x1))
         x1 = self.fc3(x1)
 
-        x2 = F.relu(self.fc4(x))
+        x2 = F.relu(self.fc4(x_input))
         x2 = F.relu(self.fc5(x2))
         x2 = self.fc6(x2)
         return x1, x2
