@@ -19,13 +19,13 @@ class ReplayBuffer:
     def __len__(self):
         return len(self.memory)
 
-    def append(self, state, action, reward, next_state, done):
+    def append(self, state, action, reward, next_state, mask):
         '''
-        content : state, action, reward, next_state, done
+        content : state, action, reward, next_state, mask
         '''
         if len(self) < self.capacity:
             self.memory.append(None)
-        self.memory[self.change_idx] = [state, action, reward, next_state, done]
+        self.memory[self.change_idx] = [state, action, reward, next_state, mask]
 
         # Update next location to change
         self.change_idx += 1
@@ -34,8 +34,8 @@ class ReplayBuffer:
 
     def random_sample(self, size):
         samples = random.sample(self.memory, k=size)
-        states, actions, rewards, next_states, dones = map(np.stack, zip(*samples))
-        return states, actions, rewards, next_states, dones
+        states, actions, rewards, next_states, masks = map(np.stack, zip(*samples))
+        return states, actions, rewards, next_states, masks
     
     def save(self):
         if not os.path.exists("checkpoints/"):
