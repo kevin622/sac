@@ -8,7 +8,7 @@
 # env.reset()
 # done = False
 # while not done:
-#     env.render()
+#     env.render(mode='rgb_array')
 #     video_recorder.capture_frame()
 #     _, _, done, _ = env.step(env.action_space.sample())
 
@@ -16,12 +16,18 @@
 # video_recorder.enabled = False
 # env.close()
 
-import gym
-from gym.wrappers import Monitor
-env = Monitor(gym.make('CartPole-v0'), './video', force=True)
-state = env.reset()
-done = False
-while not done:
-    action = env.action_space.sample()
-    state_next, reward, done, info = env.step(action)
-env.close()
+# import gym
+# from gym.wrappers import Monitor
+# env = Monitor(gym.make('CartPole-v0'), './video', force=True)
+# state = env.reset()
+# done = False
+# while not done:
+#     action = env.action_space.sample()
+#     state_next, reward, done, info = env.step(action)
+# env.close()
+
+import argparse
+parser = argparse.ArgumentParser(description="Soft Actor Critic Args")
+parser.add_argument('--cuda', action="store_true", help='run on CUDA (default: False)')
+args = parser.parse_args()
+print(args.cuda)

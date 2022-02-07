@@ -3,15 +3,12 @@ import random
 import pickle
 
 import numpy as np
-import torch
-from stable_baselines3.common.env_util import make_vec_env
-
 
 class ReplayBuffer:
     def __init__(self, args):
         random.seed(args.seed)
-        self.env_name = args.env_name
         self.capacity = args.buffer_size
+        self.env_name = args.env_name
         self.memory = []
         self.change_idx = 0
 
@@ -22,16 +19,14 @@ class ReplayBuffer:
         '''
         content : state, action, reward, next_state, mask
         '''
-        if len(self) < self.capacity:
+        if len(self.memory) < self.capacity:
             self.memory.append(None)
         self.memory[self.change_idx] = (state, action, reward, next_state, mask)
 
         # Update next location to change
-        self.change_idx += 1
-        if self.change_idx == self.capacity:
-            self.change_idx = 0
+        self.change_idx = (self.change_idx + 1) % self.capacity
 
-    def random_sample(self, size):
+    def sample(self, size):
         samples = random.sample(self.memory, k=size)
         states, actions, rewards, next_states, masks = map(np.stack, zip(*samples))
         return states, actions, rewards, next_states, masks

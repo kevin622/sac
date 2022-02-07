@@ -1,114 +1,80 @@
-from typing import OrderedDict
 import torch
+import torch.nn.functional as F
 from torch.optim import Adam
-import torch.nn.functional  as F
-from models import Policy, QNetwork, ValueNetwork
-from data_generation.data_generation import ReplayBuffer
+from replay_buffer import ReplayBuffer
 from utils import hard_update, soft_update, to_numpy, to_tensor
+from models import Policy, QNetwork
+
 
 class SAC(object):
-    def __init__(self, device, args, env):
+
+    def __init__(self, args, state_shape, action_shape):
         # hyperparameters
         self.gamma = args.gamma
         self.tau = args.tau
         self.alpha = args.alpha
-        self.device = device
-        state_shape = env.observation_space.shape[0]
-        action_shape = env.action_space.shape[0]
-        
-        # Neural Nets
-        # Policy(actor)
-        self.policy = Policy(input_size=state_shape, output_size=action_shape).to(device)
-        self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
-        # Q values(critic)
-        self.q_network = QNetwork(num_state=state_shape, num_action=action_shape).to(device)
-        self.q_optim = Adam(self.q_network.parameters(), lr=args.lr)
+        self.device = torch.device("cuda" if args.cuda else "cpu")
 
-        self.q_target_network = QNetwork(num_state=state_shape, num_action=action_shape).to(device)
-        hard_update(self.q_target_network, self.q_network)
-        # # Value
-        # self.value_network = ValueNetwork(input_size=state_shape).to(device)
-        # self.value_optim = Adam(self.value_network.parameters(), lr=args.lr)
-        # # Value Exponential Average
-        # self.value_avg_network = ValueNetwork(input_size=state_shape).to(device)
-        # hard_update(self.value_avg_network, self.value_network)
+        # Neural Nets
+        # Q values(critic)
+        self.critic = QNetwork(state_shape, action_shape, args.hidden_dim).to(self.device)
+        self.critic_optim = Adam(self.critic.parameters(), lr=args.lr)
+
+        self.critic_target = QNetwork(state_shape, action_shape, args.hidden_dim).to(self.device)
+        hard_update(self.critic_target, self.critic)
+
+        # Policy(actor)
+        self.policy = Policy(state_shape, action_shape, args.hidden_dim).to(self.device)
+        self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
 
     def get_action(self, state, evaluation=False):
-        state = to_tensor(state).unsqueeze(0)
-        if evaluation:
-            action = self.policy.sample(state)[2]
+        state = to_tensor(state).to(self.device).unsqueeze(0)
+        if not evaluation:
+            action, _, _ = self.policy.sample(state)
         else:
-            action = self.policy.sample(state)[0]
+            _, _, action = self.policy.sample(state)
         return to_numpy(action)[0]
-        
-    
+
     def update_parameters(self, memory: ReplayBuffer, batch_size: int):
         '''
         returns (value_loss, Q1_loss, Q2_loss, policy_loss)
         '''
-        state_batch, action_batch, reward_batch, next_state_batch, mask_batch = memory.random_sample(size=batch_size)
-        state_batch = to_tensor(state_batch)
-        action_batch = to_tensor(action_batch)
-        reward_batch = to_tensor(reward_batch).unsqueeze(1)
-        next_state_batch = to_tensor(next_state_batch)
-        mask_batch = to_tensor(mask_batch).unsqueeze(1)
+        state_batch, action_batch, reward_batch, next_state_batch, mask_batch = memory.sample(
+            size=batch_size)
 
-        # # Update Value
-        # with torch.no_grad():
-        #     curr_policy_action_batch, curr_policy_log_prob, _ = self.policy.sample(state_batch)
-        #     curr_policy_Q1_st_at, curr_policy_Q2_st_at = self.q_network(state_batch, curr_policy_action_batch)
-        #     curr_policy_Q_st_at = torch.min(curr_policy_Q1_st_at, curr_policy_Q2_st_at)
-        # V_st = self.value_network(state_batch)
-        # value_loss = F.mse_loss(V_st, curr_policy_Q_st_at - self.alpha * curr_policy_log_prob)
-
-        # self.value_optim.zero_grad()
-        # value_loss.backward()
-        # self.value_optim.step()
-        
-        # # Update Q
-        # # Use the exponenetial average parameters for Value network
-        # with torch.no_grad():
-        #     V_st_1 = self.value_avg_network(next_state_batch)
-        #     Q_hat_st_at = reward_batch + mask_batch * self.gamma * V_st_1
-        # Q1_st_at, Q2_st_at = self.q_network(state_batch, action_batch)
-        # Q1_loss = F.mse_loss(Q1_st_at, Q_hat_st_at)
-        # Q2_loss = F.mse_loss(Q2_st_at, Q_hat_st_at)
-        # Q_loss = Q1_loss + Q2_loss
-
-        # self.q_optim.zero_grad()
-        # Q_loss.backward()
-        # self.q_optim.step()
+        state_batch = to_tensor(state_batch).to(self.device)
+        action_batch = to_tensor(action_batch).to(self.device)
+        reward_batch = to_tensor(reward_batch).to(self.device).unsqueeze(1)
+        next_state_batch = to_tensor(next_state_batch).to(self.device)
+        mask_batch = to_tensor(mask_batch).to(self.device).unsqueeze(1)
 
         # Update Critic
         with torch.no_grad():
-            next_action, next_log_prob, _ = self.policy.sample(next_state_batch)
-            Q1_next_target, Q2_next_target = self.q_target_network(next_state_batch, next_action)
-            Q_next_target = torch.min(Q1_next_target, Q2_next_target) - self.alpha * next_log_prob
-            Q_hat_st_at = reward_batch + mask_batch * self.gamma * Q_next_target
-        Q1_st_at, Q2_st_at = self.q_network(state_batch, action_batch)
-        Q1_loss = F.mse_loss(Q1_st_at, Q_hat_st_at)
-        Q2_loss = F.mse_loss(Q2_st_at, Q_hat_st_at)
+            next_state_action, next_state_log_pi, _ = self.policy.sample(next_state_batch)
+            qf1_next_target, qf2_next_target = self.critic_target(next_state_batch,
+                                                                  next_state_action)
+            min_qf_next_target = torch.min(qf1_next_target,
+                                           qf2_next_target) - self.alpha * next_state_log_pi
+            next_q_value = reward_batch + mask_batch * self.gamma * (min_qf_next_target)
+        Q1_st_at, Q2_st_at = self.critic(state_batch, action_batch)
+        Q1_loss = F.mse_loss(Q1_st_at, next_q_value)
+        Q2_loss = F.mse_loss(Q2_st_at, next_q_value)
         Q_loss = Q1_loss + Q2_loss
 
-        self.q_optim.zero_grad()
+        self.critic_optim.zero_grad()
         Q_loss.backward()
-        self.q_optim.step()
-
+        self.critic_optim.step()
 
         # Update Policy
-        actions, log_prob, _ = self.policy.sample(state_batch)
-        Q1_st_at, Q2_st_at = self.q_network(state_batch, actions)
-        Q_st_at = torch.min(Q1_st_at, Q2_st_at)
-        policy_loss = ((self.alpha * log_prob) - Q_st_at).mean()
+        pi, log_pi, _ = self.policy.sample(state_batch)
+        Q1_st_at_pi, Q2_st_at_pi = self.critic(state_batch, pi)
+        Q_st_at_pi = torch.min(Q1_st_at_pi, Q2_st_at_pi)
+
+        policy_loss = ((self.alpha * log_pi) - Q_st_at_pi).mean()
 
         self.policy_optim.zero_grad()
         policy_loss.backward()
         self.policy_optim.step()
 
-        soft_update(self.q_target_network, self.q_network, self.tau)
-
-        # # Update Value Average
-        # soft_update(self.value_avg_network, self.value_network, self.tau)
-
-        # return value_loss.item(), Q1_loss.item(), Q2_loss.item(), policy_loss.item()
+        soft_update(self.critic_target, self.critic, self.tau)
         return Q1_loss.item(), Q2_loss.item(), policy_loss.item()

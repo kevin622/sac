@@ -9,7 +9,6 @@ import numpy as np
 
 from sac import SAC
 from replay_buffer import ReplayBuffer
-from utils import to_numpy, to_tensor, device
 
 
 def main():
@@ -18,14 +17,6 @@ def main():
                         default="Hopper-v2",
                         type=str,
                         help="Gym environment (default: Hopper-v2)")
-    parser.add_argument("--buffer_size",
-                        default=1000000,
-                        type=int,
-                        help="Size of Replay Buffer (default: 1,000,000)")
-    parser.add_argument("--lr",
-                        default=0.0003,
-                        type=float,
-                        help="Learning Rate of the Models (default: 0.0003)")
     parser.add_argument("--gamma",
                         default=0.99,
                         type=float,
@@ -36,37 +27,52 @@ def main():
         help=
         "Target Value Smoothing Constant. Large tau can lead to instabilities while small tau can make training slower. (default: 0.005)"
     )
+    parser.add_argument("--lr",
+                        default=0.0003,
+                        type=float,
+                        help="Learning Rate of the Models (default: 0.0003)")
     parser.add_argument("--alpha",
                         default=0.2,
                         type=float,
                         help="Temperature parameter for entropy importance (default: 0.2)")
-    parser.add_argument("--start_step",
-                        default=10000,
-                        type=int,
-                        help="Steps for random action (default: 10,000)")
+    parser.add_argument("--seed", default=123456, type=int, help="Random Seed (default: 123456)")
+    parser.add_argument("--batch_size", default=256, help="Size of a Batch (default: 256)")
     parser.add_argument("--num_step",
                         default=1000001,
                         type=int,
                         help="Max num of step (default: 1,000,000)")
+    parser.add_argument("--hidden_dim",
+                        default=256,
+                        type=int,
+                        help="Dimension of hidden layer")
     parser.add_argument("--num_grad_step",
                         default=1,
                         type=int,
                         help="Number of Gradient Steps for each Iteration (default: 1)")
-    parser.add_argument("--batch_size", default=256, help="Size of a Batch (default: 256)")
-    parser.add_argument("--seed", default=123456, help="Random Seed (default: 123456)")
+    parser.add_argument("--start_step",
+                        default=10000,
+                        type=int,
+                        help="Steps for random action (default: 10,000)")
+    parser.add_argument("--buffer_size",
+                        default=1000000,
+                        type=int,
+                        help="Size of Replay Buffer (default: 1,000,000)")
+    parser.add_argument('--cuda', action="store_true", help='Whether use CUDA(default: False)')
     args = parser.parse_args()
 
     env = gym.make(id=args.env_name)
     env.seed(args.seed)
-
     env.action_space.seed(args.seed)
-    np.random.seed(args.seed)
+
     torch.manual_seed(args.seed)
+    np.random.seed(args.seed)
     # Agent
-    agent = SAC(device=device, args=args, env=env)
+    state_shape = env.observation_space.shape[0]
+    action_shape = env.action_space.shape[0]
+    agent = SAC(args, state_shape, action_shape)
 
     # Weights and Biases(logging)
-    wandb.init(project="sac_2", entity="kevin622")
+    wandb.init(project="sac_3", entity="kevin622")
     wandb.config = {
         "env_name": args.env_name,
         "buffer_size": args.buffer_size,
@@ -100,6 +106,16 @@ def main():
                 action = env.action_space.sample()
             else:
                 action = agent.get_action(state, evaluation=False)
+            # Parameter Update
+            if len(replay_buffer) > args.batch_size:
+                for ith_grad_step in range(args.num_grad_step):
+                    Q1_loss, Q2_loss, policy_loss = agent.update_parameters(
+                        replay_buffer, args.batch_size)
+                    wandb.log({
+                        'Q1_loss': Q1_loss,
+                        'Q2_loss': Q2_loss,
+                        'policy_loss': policy_loss,
+                    })
             next_state, reward, done, _ = env.step(action)
             if episode_length == env._max_episode_steps:
                 mask = 1
@@ -113,16 +129,6 @@ def main():
             episode_reward += reward
             state = next_state
 
-            # Parameter Update
-            if len(replay_buffer) > args.batch_size:
-                for ith_grad_step in range(args.num_grad_step):
-                    Q1_loss, Q2_loss, policy_loss = agent.update_parameters(
-                        replay_buffer, args.batch_size)
-                    wandb.log({
-                        'Q1_loss': Q1_loss,
-                        'Q2_loss': Q2_loss,
-                        'policy_loss': policy_loss,
-                    })
 
         print(
             f'Episode: {ith_episode}, Length: {episode_length}, Reward: {round(episode_reward, 2)}, Total Step: {total_step}'
@@ -157,11 +163,11 @@ def main():
             )
             print('--------------------------')
             wandb.log({
-                "sum_reward": avg_episode_reward,
-                "episode_length": avg_episode_length,
+                "avg_episode_reward": avg_episode_reward,
+                "avg_episode_length": avg_episode_length,
             })
             replay_buffer.save()
-
+    env.close()
 
 if __name__ == "__main__":
     main()

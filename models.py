@@ -29,22 +29,22 @@ class ValueNetwork(nn.Module):
 
 
 class QNetwork(nn.Module):
-    def __init__(self, num_state, num_action):
+    def __init__(self, num_state, num_action, hidden_dim):
         super(QNetwork, self).__init__()
         # Q1
-        self.fc1 = nn.Linear(num_state + num_action, 256)
-        self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, 1)
+        self.fc1 = nn.Linear(num_state + num_action, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc3 = nn.Linear(hidden_dim, 1)
         
         # Q2
-        self.fc4 = nn.Linear(num_state + num_action, 256)
-        self.fc5 = nn.Linear(256, 256)
-        self.fc6 = nn.Linear(256, 1)
+        self.fc4 = nn.Linear(num_state + num_action, hidden_dim)
+        self.fc5 = nn.Linear(hidden_dim, hidden_dim)
+        self.fc6 = nn.Linear(hidden_dim, 1)
 
         self.apply(weights_init_)
     
     def forward(self, state, action):
-        x_input = torch.cat((state, action), dim=1)
+        x_input = torch.cat([state, action], dim=1)
         x1 = F.relu(self.fc1(x_input))
         x1 = F.relu(self.fc2(x1))
         x1 = self.fc3(x1)
@@ -56,13 +56,14 @@ class QNetwork(nn.Module):
 
 
 class Policy(nn.Module):
-    def __init__(self, input_size, output_size, action_space=None):
+    def __init__(self, input_size, output_size, hidden_dim, action_space=None):
         super(Policy, self).__init__()
-        self.fc1 = nn.Linear(input_size, 256)
-        self.fc2 = nn.Linear(256, 256)
 
-        self.fc_mean = nn.Linear(256, output_size)
-        self.fc_log_std = nn.Linear(256, output_size)
+        self.fc1 = nn.Linear(input_size, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+
+        self.fc_mean = nn.Linear(hidden_dim, output_size)
+        self.fc_log_std = nn.Linear(hidden_dim, output_size)
         self.apply(weights_init_)
 
     def forward(self, x):
@@ -77,12 +78,12 @@ class Policy(nn.Module):
         mean, log_std = self(state)
         std = log_std.exp()
         normal = Normal(mean, std)
-        sample = normal.rsample()
-        action = torch.tanh(sample)
+        x_t = normal.rsample()
+        action = torch.tanh(x_t)
 
-        log_prob = normal.log_prob(sample)
+        log_prob = normal.log_prob(x_t)
         log_prob -= torch.log(1 - action.pow(2) + epsilon)
         log_prob = log_prob.sum(1, keepdim=True)
 
-        mean_action = torch.tanh(mean)
-        return action, log_prob, mean_action
+        mean = torch.tanh(mean)
+        return action, log_prob, mean
