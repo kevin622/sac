@@ -41,6 +41,7 @@ class QNetwork(nn.Module):
         self.fc5 = nn.Linear(256, 256)
         self.fc6 = nn.Linear(256, 1)
 
+        self.apply(weights_init_)
     
     def forward(self, state, action):
         x_input = torch.cat((state, action), dim=1)

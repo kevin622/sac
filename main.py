@@ -19,17 +19,23 @@ def main():
                         type=str,
                         help="Gym environment (default: Hopper-v2)")
     parser.add_argument("--buffer_size",
-                        default=int(1e6),
+                        default=1000000,
                         type=int,
-                        help="Size of Replay Buffer (default: 1000000)")
+                        help="Size of Replay Buffer (default: 1,000,000)")
     parser.add_argument("--lr",
-                        default=3 * 1e-4,
+                        default=0.0003,
                         type=float,
                         help="Learning Rate of the Models (default: 0.0003)")
     parser.add_argument("--gamma",
                         default=0.99,
                         type=float,
                         help="Discount Rate of Future Values (default: 0.99)")
+    parser.add_argument(
+        "--tau",
+        default=0.005,
+        help=
+        "Target Value Smoothing Constant. Large tau can lead to instabilities while small tau can make training slower. (default: 0.005)"
+    )
     parser.add_argument("--alpha",
                         default=0.2,
                         type=float,
@@ -39,7 +45,7 @@ def main():
                         type=int,
                         help="Steps for random action (default: 10,000)")
     parser.add_argument("--num_step",
-                        default=1000000,
+                        default=1000001,
                         type=int,
                         help="Max num of step (default: 1,000,000)")
     parser.add_argument("--num_grad_step",
@@ -48,18 +54,14 @@ def main():
                         help="Number of Gradient Steps for each Iteration (default: 1)")
     parser.add_argument("--batch_size", default=256, help="Size of a Batch (default: 256)")
     parser.add_argument("--seed", default=123456, help="Random Seed (default: 123456)")
-    parser.add_argument(
-        "--tau",
-        default=0.005,
-        help=
-        "Target Value Smoothing Constant. Large tau can lead to instabilities while small tau can make training slower. (default: 0.005)"
-    )
     args = parser.parse_args()
-    np.random.seed(args.seed)
-    torch.manual_seed(args.seed)
 
     env = gym.make(id=args.env_name)
     env.seed(args.seed)
+
+    env.action_space.seed(args.seed)
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     # Agent
     agent = SAC(device=device, args=args, env=env)
 
@@ -80,17 +82,18 @@ def main():
     }
 
     # Replay Buffer
-    replay_buffer = ReplayBuffer(device=device, args=args)
+    replay_buffer = ReplayBuffer(args=args)
 
     # Training Loop
     total_step = 0
     for ith_episode in itertools.count(1):
         if total_step > args.num_step:
             break
-        done = False
-        state = env.reset()
+        
         episode_length = 0
         episode_reward = 0
+        done = False
+        state = env.reset()
         # one episode
         while not done:
             if total_step < args.start_step:

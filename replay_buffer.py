@@ -8,9 +8,8 @@ from stable_baselines3.common.env_util import make_vec_env
 
 
 class ReplayBuffer:
-    def __init__(self, device, args):
+    def __init__(self, args):
         random.seed(args.seed)
-        self.device = device
         self.env_name = args.env_name
         self.capacity = args.buffer_size
         self.memory = []
@@ -25,7 +24,7 @@ class ReplayBuffer:
         '''
         if len(self) < self.capacity:
             self.memory.append(None)
-        self.memory[self.change_idx] = [state, action, reward, next_state, mask]
+        self.memory[self.change_idx] = (state, action, reward, next_state, mask)
 
         # Update next location to change
         self.change_idx += 1
