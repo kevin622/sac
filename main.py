@@ -5,6 +5,7 @@ import wandb
 import torch
 # from stable_baselines3.common.env_util import make_vec_env
 import gym
+from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import numpy as np
 
 from sac import SAC
@@ -41,10 +42,7 @@ def main():
                         default=1000001,
                         type=int,
                         help="Max num of step (default: 1,000,000)")
-    parser.add_argument("--hidden_dim",
-                        default=256,
-                        type=int,
-                        help="Dimension of hidden layer")
+    parser.add_argument("--hidden_dim", default=256, type=int, help="Dimension of hidden layer")
     parser.add_argument("--num_grad_step",
                         default=1,
                         type=int,
@@ -95,7 +93,7 @@ def main():
     for ith_episode in itertools.count(1):
         if total_step > args.num_step:
             break
-        
+
         episode_length = 0
         episode_reward = 0
         done = False
@@ -128,7 +126,6 @@ def main():
             episode_length += 1
             episode_reward += reward
             state = next_state
-
 
         print(
             f'Episode: {ith_episode}, Length: {episode_length}, Reward: {round(episode_reward, 2)}, Total Step: {total_step}'
@@ -167,7 +164,26 @@ def main():
                 "avg_episode_length": avg_episode_length,
             })
             replay_buffer.save()
+
+        # Video Record
+        if ith_episode % 1000 == 0:
+            video_recorder = None
+            video_recorder = VideoRecorder(env=env,
+                                           base_path=f'video/{args.env_name}_{ith_episode}',
+                                           enabled=True)
+            state = env.reset()
+            done = False
+            while not done:
+                env.render(mode='rgb_array')
+                action = agent.get_action(state, evaluation=True)
+                next_state, reward, done, _ = env.step(action)
+                state = next_state
+            video_recorder.close()
+            video_recorder.enabled = False
+            video_recorder = None
+
     env.close()
+
 
 if __name__ == "__main__":
     main()

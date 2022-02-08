@@ -1,20 +1,22 @@
-# import gym
-# from gym.wrappers.monitoring.video_recorder import VideoRecorder
+import gym
+from gym.wrappers.monitoring.video_recorder import VideoRecorder
 
-# env = gym.make("CartPole-v0")
-# video_recorder = None
-# video_recorder = VideoRecorder(env=env, base_path="env_temp_video", enabled=True)
+env = gym.make("Ant-v2")
+video_recorder = None
+video_recorder = VideoRecorder(env=env, base_path="env_temp_video", enabled=True)
 
-# env.reset()
-# done = False
-# while not done:
-#     env.render(mode='rgb_array')
-#     video_recorder.capture_frame()
-#     _, _, done, _ = env.step(env.action_space.sample())
+env.reset()
+done = False
+while not done:
+    env.render(mode='rgb_array')
+    video_recorder.capture_frame()
+    _, _, done, _ = env.step(env.action_space.sample())
 
-# video_recorder.close()
-# video_recorder.enabled = False
-# env.close()
+video_recorder.close()
+video_recorder.enabled = False
+env.close()
+
+
 
 # import gym
 # from gym.wrappers import Monitor
@@ -25,9 +27,3 @@
 #     action = env.action_space.sample()
 #     state_next, reward, done, info = env.step(action)
 # env.close()
-
-import argparse
-parser = argparse.ArgumentParser(description="Soft Actor Critic Args")
-parser.add_argument('--cuda', action="store_true", help='run on CUDA (default: False)')
-args = parser.parse_args()
-print(args.cuda)

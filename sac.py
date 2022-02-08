@@ -8,7 +8,7 @@ from models import Policy, QNetwork
 
 class SAC(object):
 
-    def __init__(self, args, state_shape, action_shape):
+    def __init__(self, args, state_shape, action_shape, action_space=None):
         # hyperparameters
         self.gamma = args.gamma
         self.tau = args.tau
@@ -24,7 +24,7 @@ class SAC(object):
         hard_update(self.critic_target, self.critic)
 
         # Policy(actor)
-        self.policy = Policy(state_shape, action_shape, args.hidden_dim).to(self.device)
+        self.policy = Policy(state_shape, action_shape, args.hidden_dim, action_space).to(self.device)
         self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
 
     def get_action(self, state, evaluation=False):

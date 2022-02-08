@@ -66,6 +66,13 @@ class Policy(nn.Module):
         self.fc_log_std = nn.Linear(hidden_dim, output_size)
         self.apply(weights_init_)
 
+        if action_space == None:
+            self.action_scale = torch.tensor(1.)
+            self.action_bias = torch.tensor(0.)
+        else:
+            self.action_scale = ((action_space.high - action_space.low) / 2.)
+            self.action_bias = ((action_space.high + action_space.low) / 2.)
+
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -79,11 +86,17 @@ class Policy(nn.Module):
         std = log_std.exp()
         normal = Normal(mean, std)
         x_t = normal.rsample()
-        action = torch.tanh(x_t)
+        y_t = torch.tanh(x_t)
+        action = y_t * self.action_scale + self.action_bias
 
         log_prob = normal.log_prob(x_t)
-        log_prob -= torch.log(1 - action.pow(2) + epsilon)
+        log_prob -= torch.log(self.action_scale * (1 - y_t.pow(2)) + epsilon)
         log_prob = log_prob.sum(1, keepdim=True)
 
-        mean = torch.tanh(mean)
+        mean = torch.tanh(mean) * self.action_scale + self.action_bias
         return action, log_prob, mean
+    
+    def to(self, device):
+        self.action_scale = self.action_scale.to(device)
+        self.action_bias = self.action_bias.to(device)
+        return super(Policy, self).to(device)
