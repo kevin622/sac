@@ -20,39 +20,47 @@ def main():
                         help="Gym environment (default: Hopper-v2)")
     parser.add_argument("--gamma",
                         default=0.99,
+                        metavar='G',
                         type=float,
                         help="Discount Rate of Future Values (default: 0.99)")
     parser.add_argument(
         "--tau",
         default=0.005,
+        metavar='G',
         help=
         "Target Value Smoothing Constant. Large tau can lead to instabilities while small tau can make training slower. (default: 0.005)"
     )
     parser.add_argument("--lr",
                         default=0.0003,
+                        metavar='G',
                         type=float,
                         help="Learning Rate of the Models (default: 0.0003)")
     parser.add_argument("--alpha",
                         default=0.2,
+                        metavar='G',
                         type=float,
                         help="Temperature parameter for entropy importance (default: 0.2)")
-    parser.add_argument("--seed", default=123456, type=int, help="Random Seed (default: 123456)")
-    parser.add_argument("--batch_size", default=256, help="Size of a Batch (default: 256)")
+    parser.add_argument("--seed", metavar='N', default=123456, type=int, help="Random Seed (default: 123456)")
+    parser.add_argument("--batch_size", metavar='N', default=256, help="Size of a Batch (default: 256)")
     parser.add_argument("--num_step",
                         default=1000001,
+                        metavar='N', 
                         type=int,
                         help="Max num of step (default: 1,000,000)")
-    parser.add_argument("--hidden_dim", default=256, type=int, help="Dimension of hidden layer")
+    parser.add_argument("--hidden_dim", metavar='N', default=256, type=int, help="Dimension of hidden layer")
     parser.add_argument("--num_grad_step",
                         default=1,
+                        metavar='N', 
                         type=int,
                         help="Number of Gradient Steps for each Iteration (default: 1)")
     parser.add_argument("--start_step",
                         default=10000,
+                        metavar='N', 
                         type=int,
                         help="Steps for random action (default: 10,000)")
     parser.add_argument("--buffer_size",
                         default=1000000,
+                        metavar='N', 
                         type=int,
                         help="Size of Replay Buffer (default: 1,000,000)")
     parser.add_argument('--cuda', action="store_true", help='Whether use CUDA(default: False)')
