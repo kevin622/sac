@@ -175,7 +175,7 @@ def main():
             replay_buffer.save()
 
         # Video Record
-        if ith_episode in [50, 100, *range(500, 5001, 500)]:
+        if ith_episode in {50, 100, *range(500, 100001, 500)}:
             if not os.path.exists("video/"):
                 os.makedirs('video/')
             video_recorder = None
