@@ -47,12 +47,34 @@ usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G] [--alph
 ```
 
 
-
-
 When specifying GPU, 
 ```bash
 CUDA_VISIBLE_DEVICES=1,2 python main.py --buffer_size 1000
 ```
+## Results
+
+### Videos of Learned Agents
+
+![Hopper-v2_trained](figures/Hopper-v2_trained.gif) ![Ant-v2_trained](figures/Ant-v2_trained.gif) 
+![HalfCheetah-v2_trained](figures/HalfCheetah-v2_trained.gif) ![Walker2d-v2_trained](figures/Walker2d-v2_trained.gif) 
+
+### Change of Rewards
+
+<img alt="Hopper-v2_avg_reward" src="figures/Hopper-v2_avg_reward.png" width=350></img> <img alt="Ant-v2_avg_reward" src="figures/Ant-v2_avg_reward.png" width=350></img>
+<img alt="HalfCheetah-v2_avg_reward" src="figures/HalfCheetah-v2_avg_reward.png" width=350></img> <img alt="Walker2d-v2_avg_reward" src="figures/Walker2d-v2_avg_reward.png" width=350></img>
+
+
+
+
+
+
+
+
+
+
+
+
+
 ----------------------
 
 ## About the paper
