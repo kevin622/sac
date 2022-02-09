@@ -174,7 +174,7 @@ def main():
             replay_buffer.save()
 
         # Video Record
-        if ith_episode % 1000 == 0:
+        if ith_episode in [50, 100, 500, 1000, 1500, 2000, 2500, 3000]:
             video_recorder = None
             video_recorder = VideoRecorder(env=env,
                                            base_path=f'video/{args.env_name}_{ith_episode}',
@@ -183,12 +183,12 @@ def main():
             done = False
             while not done:
                 env.render(mode='rgb_array')
+                video_recorder.capture_frame()
                 action = agent.get_action(state, evaluation=True)
                 next_state, reward, done, _ = env.step(action)
                 state = next_state
             video_recorder.close()
             video_recorder.enabled = False
-            video_recorder = None
 
     env.close()
 
