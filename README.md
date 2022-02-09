@@ -4,9 +4,10 @@ This repository is for implementation of [Soft Actor-Critic: Off-Policy Maximum 
 
 ## Problems that are being tackled
 
-The SAC algorithm tackled 2 problems of model free deep RL methods. 
-First was __sample complexity__. On-policy methods consist of policy gradient formulation and require new samples to be collected for each gradient step. Using off-policy  learning may resolve this problem, but that leads to the second problem.
-Second was __convergence brittleness__. The combination of off-policy learning and high-dimensional, nonlinear function approximation with neural networks presents a major challenge for stability and convergence, espescially in continuous state and action spaces.
+The SAC method tackled 2 problems of model free deep RL methods. 
+
+- First was __sample complexity__. On-policy methods consist of policy gradient formulation and require new samples to be collected for each gradient step. Using off-policy  learning may resolve this problem, but that leads to the second problem.
+- Second was __convergence brittleness__. The combination of off-policy learning and high-dimensional, nonlinear function approximation with neural networks presents a major challenge for stability and convergence, espescially in continuous state and action spaces.
 
 ### How these problems are being solved 
 
@@ -36,26 +37,21 @@ usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G] [--alph
                 [--num_grad_step N] [--start_step N] [--buffer_size N] [--cuda]
 ```
 
-### Meaning and default values of each options
+### Meaning and default values of important options
 - `--env_name`:   Gym environment (default: Hopper-v2)
-- `--gamma`: Discount Rate of Future Values (default: 0.99)
-- `--tau`: Target Value Smoothing Constant. Large tau can lead to instabilities while small tau can make training slower. (default: 0.005)
-- `--lr`: Learning Rate of the Models (default: 0.0003)
-- `--alpha`: Temperature parameter for entropy importance (default: 0.2)
-- `--seed`:  Random Seed (default: 123456)
-- `--batch_size` : Size of a Batch (default: 256)
-- `--num_step`: Max num of step (default: 1,000,000)
-- `--hidden_dim`: Dimension of hidden layer
-- `--num_grad_step`: Number of Gradient Steps for each Iteration (default: 1)
-- `--start_step`:  Steps for random action (default: 10,000)
-- `--buffer_size`: Size of Replay Buffer (default: 1,000,000)
 - `--cuda`: Whether to use CUDA(default: False)
 
 
-When specifying GPU, 
+When specifying GPU, use the environment variable `CUDA_VISIBLE_DEVICES`
 ```bash
 CUDA_VISIBLE_DEVICES=1,2 python main.py
 ```
+### Code Example
+
+```bash
+$ CUDA_VISIBLE_DEVICES=1python main.py --evn_name HalfCheetah-v2 --cuda --num_step 3000000
+```
+
 ## Results
 
 ### Videos of Learned Agents
