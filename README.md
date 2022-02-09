@@ -49,7 +49,7 @@ usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G] [--alph
 
 When specifying GPU, 
 ```bash
-CUDA_VISIBLE_DEVICES=1,2 python main.py --buffer_size 1000
+CUDA_VISIBLE_DEVICES=1,2 python main.py
 ```
 ## Results
 
