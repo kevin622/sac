@@ -30,16 +30,31 @@ SAC algorithm is a deep-RL `Off-Policy Actor-Critic` `Maximum Entropy` algorithm
 - `sac.py`: Defines the agent and it's algorithm to update the parameters.
 - `main.py`: The file to run.
 
-### How to run
+### WANDB usage
+
+Logging was done using [wandb](https://wandb.ai/). In order to use it, you need an account for the website. If you have an account, run the following to install required packages.
+
 ```bash
-usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G] [--alpha G]
-                [--seed N] [--batch_size N] [--num_step N] [--hidden_dim N]
-                [--num_grad_step N] [--start_step N] [--buffer_size N] [--cuda]
+pip install wandb
+wandb login
+```
+
+### How to run
+
+```bash
+usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G]
+               [--alpha G] [--seed N] [--batch_size N] [--num_step N]
+               [--hidden_dim N] [--num_grad_step N] [--start_step N]
+               [--buffer_size N] [--cuda] [--wandb] [--wandb_id WANDB_ID]
+               [--wandb_project WANDB_PROJECT]
 ```
 
 ### Meaning and default values of important options
 - `--env_name`:   Gym environment (default: Hopper-v2)
 - `--cuda`: Whether to use CUDA(default: False)
+- `--wandb`: Whether use Weight and Bias for logging(default: False)
+- `--wandb_id`: ID for wandb account(default: None)
+- `--wandb_project`: project name of wandb account(default: None)
 
 
 When specifying GPU, use the environment variable `CUDA_VISIBLE_DEVICES`
@@ -49,7 +64,7 @@ CUDA_VISIBLE_DEVICES=1,2 python main.py
 ### Code Example
 
 ```bash
-$ CUDA_VISIBLE_DEVICES=1python main.py --evn_name HalfCheetah-v2 --cuda --num_step 3000000
+$ CUDA_VISIBLE_DEVICES=1 python main.py --evn_name HalfCheetah-v2 --cuda --num_step 3000000
 ```
 
 ## Results
