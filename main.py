@@ -65,6 +65,10 @@ def main():
                         type=int,
                         help="Size of Replay Buffer (default: 1,000,000)")
     parser.add_argument('--cuda', action="store_true", help='Whether use CUDA(default: False)')
+    parser.add_argument('--wandb', action="store_true", help='Whether use Weight and Bias for logging(default: False)')
+    parser.add_argument('--wandb_id', default=None, help='ID for wandb account(default: None)')
+    parser.add_argument('--wandb_project', default=None, help='project name of wandb account(default: None)')
+
     args = parser.parse_args()
 
     env = gym.make(id=args.env_name)
@@ -79,20 +83,22 @@ def main():
     agent = SAC(args, state_shape, action_shape)
 
     # Weights and Biases(logging)
-    wandb.init(project="sac_3", entity="kevin622")
-    wandb.config = {
-        "env_name": args.env_name,
-        "buffer_size": args.buffer_size,
-        "lr": args.lr,
-        "gamma": args.gamma,
-        "alpha": args.alpha,
-        "start_step": args.start_step,
-        "num_step": args.num_step,
-        "num_grad_step": args.num_grad_step,
-        "batch_size": args.batch_size,
-        "seed": args.seed,
-        "tau": args.tau,
-    }
+    if args.wandb:
+        # wandb.init(project="sac_3", entity="kevin622")
+        wandb.init(project=args.wandb_project, entity=args.wandb_id)
+        wandb.config = {
+            "env_name": args.env_name,
+            "buffer_size": args.buffer_size,
+            "lr": args.lr,
+            "gamma": args.gamma,
+            "alpha": args.alpha,
+            "start_step": args.start_step,
+            "num_step": args.num_step,
+            "num_grad_step": args.num_grad_step,
+            "batch_size": args.batch_size,
+            "seed": args.seed,
+            "tau": args.tau,
+        }
 
     # Replay Buffer
     replay_buffer = ReplayBuffer(args=args)
@@ -118,11 +124,12 @@ def main():
                 for ith_grad_step in range(args.num_grad_step):
                     Q1_loss, Q2_loss, policy_loss = agent.update_parameters(
                         replay_buffer, args.batch_size)
-                    wandb.log({
-                        'Q1_loss': Q1_loss,
-                        'Q2_loss': Q2_loss,
-                        'policy_loss': policy_loss,
-                    })
+                    if args.wandb:
+                        wandb.log({
+                            'Q1_loss': Q1_loss,
+                            'Q2_loss': Q2_loss,
+                            'policy_loss': policy_loss,
+                        })
             next_state, reward, done, _ = env.step(action)
             if episode_length == env._max_episode_steps:
                 mask = 1
@@ -139,10 +146,11 @@ def main():
         print(
             f'Episode: {ith_episode}, Length: {episode_length}, Reward: {round(episode_reward, 2)}, Total Step: {total_step}'
         )
-        wandb.log({
-            'episode_length': episode_length,
-            'episode_reward': episode_reward,
-        })
+        if args.wandb:
+            wandb.log({
+                'episode_length': episode_length,
+                'episode_reward': episode_reward,
+            })
 
         # For evaluation
         if ith_episode % 10 == 0:
@@ -168,10 +176,11 @@ def main():
                 f'Evaluation on 10 episodes(average) - Length: {avg_episode_length}, Reward: {round(avg_episode_reward, 2)}'
             )
             print('--------------------------')
-            wandb.log({
-                "avg_episode_reward": avg_episode_reward,
-                "avg_episode_length": avg_episode_length,
-            })
+            if args.wandb:
+                wandb.log({
+                    "avg_episode_reward": avg_episode_reward,
+                    "avg_episode_length": avg_episode_length,
+                })
             replay_buffer.save()
 
         # Video Record
