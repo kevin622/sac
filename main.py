@@ -1,5 +1,6 @@
 import argparse
 import itertools
+import os
 
 import wandb
 import torch
@@ -174,7 +175,9 @@ def main():
             replay_buffer.save()
 
         # Video Record
-        if ith_episode in [50, 100, 500, 1000, 1500, 2000, 2500, 3000]:
+        if ith_episode in [50, 100, *range(500, 5001, 500)]:
+            if not os.path.exists("video/"):
+                os.makedirs('video/')
             video_recorder = None
             video_recorder = VideoRecorder(env=env,
                                            base_path=f'video/{args.env_name}_{ith_episode}',
