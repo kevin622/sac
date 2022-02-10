@@ -204,3 +204,7 @@ wandb
 checkpoints/
 
 video/
+
+not_on_git_folder/*
+not_on_git_folder/
+not_on_git_folder
