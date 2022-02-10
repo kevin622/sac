@@ -82,6 +82,6 @@ class SAC(object):
         policy_loss.backward()
         self.policy_optim.step()
 
-        if update_cnt % self.target_update_interval:
+        if update_cnt % self.target_update_interval == 0:
             soft_update(self.critic_target, self.critic, self.tau)
         return Q1_loss.item(), Q2_loss.item(), policy_loss.item()
