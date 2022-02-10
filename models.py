@@ -93,6 +93,8 @@ class Policy(nn.Module):
         log_prob -= torch.log(self.action_scale * (1 - y_t.pow(2)) + epsilon)
         log_prob = log_prob.sum(1, keepdim=True)
 
+        # When evaluating the policy, it doesn't sample action from the distribution.
+        # It rather uses the mean value of the distribution as the action.
         mean = torch.tanh(mean) * self.action_scale + self.action_bias
         return action, log_prob, mean
     

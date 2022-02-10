@@ -28,6 +28,10 @@ class SAC(object):
         self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
 
     def get_action(self, state, evaluation=False):
+        '''
+        If evaluation is False, it returns a sampled action from the distribution.
+        If evaluation is True, it returns a mean action(action as the mean value) from the distribution
+        '''
         state = to_tensor(state).to(self.device).unsqueeze(0)
         if not evaluation:
             action, _, _ = self.policy.sample(state)

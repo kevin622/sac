@@ -4,7 +4,6 @@ import os
 
 import wandb
 import torch
-# from stable_baselines3.common.env_util import make_vec_env
 import gym
 from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import numpy as np
@@ -84,7 +83,6 @@ def main():
 
     # Weights and Biases(logging)
     if args.wandb:
-        # wandb.init(project="sac_3", entity="kevin622")
         wandb.init(project=args.wandb_project, entity=args.wandb_id)
         wandb.config = {
             "env_name": args.env_name,
@@ -101,7 +99,7 @@ def main():
         }
 
     # Replay Buffer
-    replay_buffer = ReplayBuffer(args=args)
+    replay_buffer = ReplayBuffer(args.seed, args.buffer_size, args.env_name)
 
     # Training Loop
     total_step = 0
@@ -131,6 +129,7 @@ def main():
                             'policy_loss': policy_loss,
                         })
             next_state, reward, done, _ = env.step(action)
+            # mask is 1 if current transition is not the end of the episode, 0 otherwise.
             if episode_length == env._max_episode_steps:
                 mask = 1
             else:
