@@ -44,8 +44,9 @@ wandb login
 ```bash
 usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G]
                [--alpha G] [--seed N] [--batch_size N] [--num_step N]
-               [--hidden_dim N] [--num_grad_step N] [--start_step N]
-               [--buffer_size N] [--cuda] [--wandb] [--wandb_id WANDB_ID]
+               [--hidden_dim N] [--num_grad_step N]
+               [--target_update_interval N] [--start_step N] [--buffer_size N]
+               [--cuda] [--wandb] [--wandb_id WANDB_ID]
                [--wandb_project WANDB_PROJECT]
 ```
 
