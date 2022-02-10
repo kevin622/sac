@@ -27,6 +27,7 @@ def main():
         "--tau",
         default=0.005,
         metavar='G',
+        type=float,
         help=
         "Target Value Smoothing Constant. Large tau can lead to instabilities while small tau can make training slower. (default: 0.005)"
     )
@@ -53,6 +54,11 @@ def main():
                         metavar='N', 
                         type=int,
                         help="Number of Gradient Steps for each Iteration (default: 1)")
+    parser.add_argument("--target_update_interval",
+                        default=1,
+                        metavar='N', 
+                        type=int,
+                        help="Target update interval (default: 1)")
     parser.add_argument("--start_step",
                         default=10000,
                         metavar='N', 
@@ -79,7 +85,7 @@ def main():
     # Agent
     state_shape = env.observation_space.shape[0]
     action_shape = env.action_space.shape[0]
-    agent = SAC(args, state_shape, action_shape)
+    agent = SAC(args, state_shape, action_shape, env.action_space)
 
     # Weights and Biases(logging)
     if args.wandb:
@@ -93,6 +99,7 @@ def main():
             "start_step": args.start_step,
             "num_step": args.num_step,
             "num_grad_step": args.num_grad_step,
+            "target_update_interval": args.target_update_interval,
             "batch_size": args.batch_size,
             "seed": args.seed,
             "tau": args.tau,
@@ -103,6 +110,7 @@ def main():
 
     # Training Loop
     total_step = 0
+    update_cnt = 0
     for ith_episode in itertools.count(1):
         if total_step > args.num_step:
             break
@@ -120,8 +128,9 @@ def main():
             # Parameter Update
             if len(replay_buffer) > args.batch_size:
                 for ith_grad_step in range(args.num_grad_step):
+                    update_cnt += 1
                     Q1_loss, Q2_loss, policy_loss = agent.update_parameters(
-                        replay_buffer, args.batch_size)
+                        replay_buffer, args.batch_size, update_cnt)
                     if args.wandb:
                         wandb.log({
                             'Q1_loss': Q1_loss,

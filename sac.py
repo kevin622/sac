@@ -13,6 +13,7 @@ class SAC(object):
         self.gamma = args.gamma
         self.tau = args.tau
         self.alpha = args.alpha
+        self.target_update_interval = args.target_update_interval
         self.device = torch.device("cuda" if args.cuda else "cpu")
 
         # Neural Nets
@@ -21,6 +22,7 @@ class SAC(object):
         self.critic_optim = Adam(self.critic.parameters(), lr=args.lr)
 
         self.critic_target = QNetwork(state_shape, action_shape, args.hidden_dim).to(self.device)
+        # copy the NN parameters
         hard_update(self.critic_target, self.critic)
 
         # Policy(actor)
@@ -39,7 +41,7 @@ class SAC(object):
             _, _, action = self.policy.sample(state)
         return to_numpy(action)[0]
 
-    def update_parameters(self, memory: ReplayBuffer, batch_size: int):
+    def update_parameters(self, memory: ReplayBuffer, batch_size: int, update_cnt: int):
         '''
         returns (value_loss, Q1_loss, Q2_loss, policy_loss)
         '''
@@ -80,5 +82,6 @@ class SAC(object):
         policy_loss.backward()
         self.policy_optim.step()
 
-        soft_update(self.critic_target, self.critic, self.tau)
+        if update_cnt % self.target_update_interval:
+            soft_update(self.critic_target, self.critic, self.tau)
         return Q1_loss.item(), Q2_loss.item(), policy_loss.item()

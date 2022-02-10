@@ -70,8 +70,8 @@ class Policy(nn.Module):
             self.action_scale = torch.tensor(1.)
             self.action_bias = torch.tensor(0.)
         else:
-            self.action_scale = ((action_space.high - action_space.low) / 2.)
-            self.action_bias = ((action_space.high + action_space.low) / 2.)
+            self.action_scale = torch.tensor((action_space.high - action_space.low) / 2.)
+            self.action_bias = torch.tensor((action_space.high + action_space.low) / 2.)
 
     def forward(self, x):
         x = F.relu(self.fc1(x))
