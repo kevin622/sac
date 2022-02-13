@@ -73,10 +73,12 @@ $ CUDA_VISIBLE_DEVICES=1 python main.py --evn_name HalfCheetah-v2 --cuda --num_s
 ### Videos of Learned Agents
 
 ![Hopper-v2_trained](figures/Hopper-v2_trained.gif) ![Ant-v2_trained](figures/Ant-v2_trained.gif) 
-![HalfCheetah-v2_trained](figures/HalfCheetah-v2_trained.gif) ![Walker2d-v2_trained](figures/Walker2d-v2_trained.gif) 
+![HalfCheetah-v2_trained](figures/HalfCheetah-v2_trained.gif) ![Walker2d-v2_trained](figures/Walker2d-v2_trained.gif)
+![Humanoid-v2_trained](figures/Humanoid-v2_trained.gif) 
 
 ### Change of Rewards
 
 <img alt="Hopper-v2_avg_reward" src="figures/Hopper-v2_avg_reward.png" width=350></img> <img alt="Ant-v2_avg_reward" src="figures/Ant-v2_avg_reward.png" width=350></img>
 <img alt="HalfCheetah-v2_avg_reward" src="figures/HalfCheetah-v2_avg_reward.png" width=350></img> <img alt="Walker2d-v2_avg_reward" src="figures/Walker2d-v2_avg_reward.png" width=350></img>
+<img alt="Humanoid-v2_avg_reward" src="figures/Humanoid-v2_avg_reward.png" width=350></img>
 
