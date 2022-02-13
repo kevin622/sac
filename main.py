@@ -1,6 +1,7 @@
 import argparse
 import itertools
 import os
+import random
 
 import wandb
 import torch
@@ -41,38 +42,53 @@ def main():
                         metavar='G',
                         type=float,
                         help="Temperature parameter for entropy importance (default: 0.2)")
-    parser.add_argument("--seed", metavar='N', default=123456, type=int, help="Random Seed (default: 123456)")
-    parser.add_argument("--batch_size", metavar='N', default=256, help="Size of a Batch (default: 256)")
+    parser.add_argument("--seed",
+                        metavar='N',
+                        default=123456,
+                        type=int,
+                        help="Random Seed (default: 123456)")
+    parser.add_argument("--batch_size",
+                        metavar='N',
+                        default=256,
+                        help="Size of a Batch (default: 256)")
     parser.add_argument("--num_step",
                         default=1000001,
-                        metavar='N', 
+                        metavar='N',
                         type=int,
                         help="Max num of step (default: 1,000,000)")
-    parser.add_argument("--hidden_dim", metavar='N', default=256, type=int, help="Dimension of hidden layer")
+    parser.add_argument("--hidden_dim",
+                        metavar='N',
+                        default=256,
+                        type=int,
+                        help="Dimension of hidden layer")
     parser.add_argument("--num_grad_step",
                         default=1,
-                        metavar='N', 
+                        metavar='N',
                         type=int,
                         help="Number of Gradient Steps for each Iteration (default: 1)")
     parser.add_argument("--target_update_interval",
                         default=1,
-                        metavar='N', 
+                        metavar='N',
                         type=int,
                         help="Target update interval (default: 1)")
     parser.add_argument("--start_step",
                         default=10000,
-                        metavar='N', 
+                        metavar='N',
                         type=int,
                         help="Steps for random action (default: 10,000)")
     parser.add_argument("--buffer_size",
                         default=1000000,
-                        metavar='N', 
+                        metavar='N',
                         type=int,
                         help="Size of Replay Buffer (default: 1,000,000)")
     parser.add_argument('--cuda', action="store_true", help='Whether use CUDA(default: False)')
-    parser.add_argument('--wandb', action="store_true", help='Whether use Weight and Bias for logging(default: False)')
+    parser.add_argument('--wandb',
+                        action="store_true",
+                        help='Whether use Weight and Bias for logging(default: False)')
     parser.add_argument('--wandb_id', default=None, help='ID for wandb account(default: None)')
-    parser.add_argument('--wandb_project', default=None, help='project name of wandb account(default: None)')
+    parser.add_argument('--wandb_project',
+                        default=None,
+                        help='project name of wandb account(default: None)')
 
     args = parser.parse_args()
 
@@ -82,10 +98,14 @@ def main():
 
     torch.manual_seed(args.seed)
     np.random.seed(args.seed)
+    random.seed(args.seed)
     # Agent
     state_shape = env.observation_space.shape[0]
     action_shape = env.action_space.shape[0]
     agent = SAC(args, state_shape, action_shape, env.action_space)
+
+    # Replay Buffer
+    replay_buffer = ReplayBuffer(args.buffer_size, args.env_name)
 
     # Weights and Biases(logging)
     if args.wandb:
@@ -105,9 +125,6 @@ def main():
             "tau": args.tau,
         }
 
-    # Replay Buffer
-    replay_buffer = ReplayBuffer(args.seed, args.buffer_size, args.env_name)
-
     # Training Loop
     total_step = 0
     update_cnt = 0
@@ -124,7 +141,7 @@ def main():
             if total_step < args.start_step:
                 action = env.action_space.sample()
             else:
-                action = agent.get_action(state, evaluation=False)
+                action = agent.sample_action(state, evaluation=False)
             # Parameter Update
             if len(replay_buffer) > args.batch_size:
                 for ith_grad_step in range(args.num_grad_step):
@@ -170,7 +187,7 @@ def main():
                 episode_reward = 0
                 state = env.reset()
                 while not done:
-                    action = agent.get_action(state, evaluation=True)
+                    action = agent.get_mean_action(state)
                     next_state, reward, done, _ = env.step(action)
                     episode_length += 1
                     episode_reward += reward
@@ -204,7 +221,7 @@ def main():
             while not done:
                 env.render(mode='rgb_array')
                 video_recorder.capture_frame()
-                action = agent.get_action(state, evaluation=True)
+                action = agent.get_mean_action(state)
                 next_state, reward, done, _ = env.step(action)
                 state = next_state
             video_recorder.close()

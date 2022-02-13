@@ -26,19 +26,18 @@ class SAC(object):
         hard_update(self.critic_target, self.critic)
 
         # Policy(actor)
-        self.policy = Policy(state_shape, action_shape, args.hidden_dim, action_space).to(self.device)
+        self.policy = Policy(state_shape, action_shape, args.hidden_dim,
+                             action_space).to(self.device)
         self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
 
-    def get_action(self, state, evaluation=False):
-        '''
-        If evaluation is False, it returns a sampled action from the distribution.
-        If evaluation is True, it returns a mean action(action as the mean value) from the distribution
-        '''
+    def sample_action(self, state):
         state = to_tensor(state).to(self.device).unsqueeze(0)
-        if not evaluation:
-            action, _, _ = self.policy.sample(state)
-        else:
-            _, _, action = self.policy.sample(state)
+        action, _, _ = self.policy.sample(state)
+        return to_numpy(action)[0]
+
+    def get_mean_action(self, state):
+        state = to_tensor(state).to(self.device).unsqueeze(0)
+        _, _, action = self.policy.sample(state)
         return to_numpy(action)[0]
 
     def update_parameters(self, memory: ReplayBuffer, batch_size: int, update_cnt: int):
@@ -53,6 +52,7 @@ class SAC(object):
         reward_batch = to_tensor(reward_batch).to(self.device).unsqueeze(1)
         next_state_batch = to_tensor(next_state_batch).to(self.device)
         mask_batch = to_tensor(mask_batch).to(self.device).unsqueeze(1)
+        # mask is 1 if current transition is not the end of the episode, 0 otherwise.
 
         # Update Critic
         with torch.no_grad():

@@ -4,9 +4,10 @@ import pickle
 
 import numpy as np
 
+
 class ReplayBuffer:
-    def __init__(self, seed, buffer_size, env_name):
-        random.seed(seed)
+
+    def __init__(self, buffer_size, env_name):
         self.capacity = buffer_size
         self.env_name = env_name
         self.memory = []
@@ -16,6 +17,7 @@ class ReplayBuffer:
         return len(self.memory)
 
     def append(self, state, action, reward, next_state, mask):
+        # mask is 1 if current transition is not the end of the episode, 0 otherwise.
         if len(self.memory) < self.capacity:
             self.memory.append(None)
         self.memory[self.change_idx] = (state, action, reward, next_state, mask)
@@ -27,11 +29,11 @@ class ReplayBuffer:
         samples = random.sample(self.memory, k=size)
         states, actions, rewards, next_states, masks = map(np.stack, zip(*samples))
         return states, actions, rewards, next_states, masks
-    
+
     def save(self):
         if not os.path.exists("checkpoints/"):
             os.makedirs('checkpoints/')
-        
+
         save_path = f'checkpoints/buffer_{self.env_name}'
         idx_save_path = f'checkpoints/buffer_{self.env_name}_idx'
         print(f'Saving Memory in {save_path}')

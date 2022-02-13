@@ -7,20 +7,23 @@ LOG_SIG_MAX = 2
 LOG_SIG_MIN = -20
 epsilon = 1e-6
 
+
 # Initialize Policy weights
 def weights_init_(m):
     if isinstance(m, nn.Linear):
         torch.nn.init.xavier_uniform_(m.weight, gain=1)
         torch.nn.init.constant_(m.bias, 0)
 
+
 class ValueNetwork(nn.Module):
+
     def __init__(self, input_size, output_size=1):
         super(ValueNetwork, self).__init__()
         self.fc1 = nn.Linear(input_size, 256)
         self.fc2 = nn.Linear(256, 256)
         self.fc3 = nn.Linear(256, output_size)
         self.apply(weights_init_)
-    
+
     def forward(self, x):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
@@ -29,20 +32,21 @@ class ValueNetwork(nn.Module):
 
 
 class QNetwork(nn.Module):
+
     def __init__(self, num_state, num_action, hidden_dim):
         super(QNetwork, self).__init__()
         # Q1
         self.fc1 = nn.Linear(num_state + num_action, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, 1)
-        
+
         # Q2
         self.fc4 = nn.Linear(num_state + num_action, hidden_dim)
         self.fc5 = nn.Linear(hidden_dim, hidden_dim)
         self.fc6 = nn.Linear(hidden_dim, 1)
 
         self.apply(weights_init_)
-    
+
     def forward(self, state, action):
         x_input = torch.cat([state, action], dim=1)
         x1 = F.relu(self.fc1(x_input))
@@ -56,6 +60,7 @@ class QNetwork(nn.Module):
 
 
 class Policy(nn.Module):
+
     def __init__(self, input_size, output_size, hidden_dim, action_space=None):
         super(Policy, self).__init__()
 
@@ -97,7 +102,7 @@ class Policy(nn.Module):
         # It rather uses the mean value of the distribution as the action.
         mean = torch.tanh(mean) * self.action_scale + self.action_bias
         return action, log_prob, mean
-    
+
     def to(self, device):
         self.action_scale = self.action_scale.to(device)
         self.action_bias = self.action_bias.to(device)
