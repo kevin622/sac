@@ -92,4 +92,4 @@ A lot of codes here are modified according to (and referred to) an [off-the-shel
 - Use replay buffer memory as a python `list`.
 - Use the network of Q values to compute the value function instead of using a seperate neural network.
 - `hard_update` and `soft_update` in `utils.py`. `load_state_dict` works well, but it requires some tuning to be used for soft update.
-- Sampling mean action when evaluating the policy.
+- When evaluating the policy, sample the mean action.

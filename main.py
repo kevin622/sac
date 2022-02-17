@@ -6,11 +6,11 @@ import random
 import wandb
 import torch
 import gym
-from gym.wrappers.monitoring.video_recorder import VideoRecorder
 import numpy as np
 
 from sac import SAC
 from replay_buffer import ReplayBuffer
+from video_record import video_record
 
 
 def main():
@@ -89,7 +89,9 @@ def main():
     parser.add_argument('--wandb_project',
                         default=None,
                         help='project name of wandb account(default: None)')
-
+    parser.add_argument('--record_video',
+                        action="store_true",
+                        help="Save video in video/ directory(made automatically) (default: False)")
     args = parser.parse_args()
 
     env = gym.make(id=args.env_name)
@@ -124,6 +126,7 @@ def main():
             "batch_size": args.batch_size,
             "seed": args.seed,
             "tau": args.tau,
+            "record_video": args.record_video,
         }
 
     # Training Loop
@@ -209,24 +212,9 @@ def main():
                 })
             replay_buffer.save()
 
-        # Video Record
-        if ith_episode in {50, 100, *range(500, 100001, 500)}:
-            if not os.path.exists("video/"):
-                os.makedirs('video/')
-            video_recorder = None
-            video_recorder = VideoRecorder(env=env,
-                                           base_path=f'video/{args.env_name}_{ith_episode}',
-                                           enabled=True)
-            state = env.reset()
-            done = False
-            while not done:
-                env.render(mode='rgb_array')
-                video_recorder.capture_frame()
-                action = agent.get_mean_action(state)
-                next_state, reward, done, _ = env.step(action)
-                state = next_state
-            video_recorder.close()
-            video_recorder.enabled = False
+        # Record video in 50th, 100th, and every 500th episode.
+        if args.record_video and (ith_episode in {50, 100} or ith_episode % 500 == 0):
+            video_record(ith_episode, env, args.env_name, agent)
 
     env.close()
 
