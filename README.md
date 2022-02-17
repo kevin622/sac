@@ -89,7 +89,7 @@ $ CUDA_VISIBLE_DEVICES=1 python main.py --evn_name HalfCheetah-v2 --cuda --num_s
 
 ## Reference
 
-A lot of codes here are modified according to (and referred to) an [off-the-shelf repository](https://github.com/pranz24/pytorch-soft-actor-critic). The main ideas I borrowed from this repo is the followings;
+A lot of codes here are modified according to (and referred to) an [off-the-shelf repository](https://github.com/pranz24/pytorch-soft-actor-critic) by [pranz24](https://github.com/pranz24). The main ideas I borrowed from this repo are the followings;
 - Use replay buffer memory as a python `list`.
 - Use the network of Q values to compute the value function instead of using a seperate neural network.
 - `hard_update` and `soft_update` in `utils.py`. `load_state_dict` works well, but it requires some tuning to be used for soft update.
