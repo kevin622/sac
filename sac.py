@@ -8,27 +8,27 @@ from models import Policy, QNetwork
 
 class SAC(object):
 
-    def __init__(self, args, state_shape, action_shape, action_space=None):
+    def __init__(self, gamma, tau, alpha, lr, cuda, target_update_interval, hidden_dim, state_shape, action_shape, action_space=None):
         # hyperparameters
-        self.gamma = args.gamma
-        self.tau = args.tau
-        self.alpha = args.alpha
-        self.target_update_interval = args.target_update_interval
-        self.device = torch.device("cuda" if args.cuda else "cpu")
+        self.gamma = gamma
+        self.tau = tau
+        self.alpha = alpha
+        self.target_update_interval = target_update_interval
+        self.device = torch.device("cuda" if cuda else "cpu")
 
         # Neural Nets
         # Q values(critic)
-        self.critic = QNetwork(state_shape, action_shape, args.hidden_dim).to(self.device)
-        self.critic_optim = Adam(self.critic.parameters(), lr=args.lr)
+        self.critic = QNetwork(state_shape, action_shape, hidden_dim).to(self.device)
+        self.critic_optim = Adam(self.critic.parameters(), lr=lr)
 
-        self.critic_target = QNetwork(state_shape, action_shape, args.hidden_dim).to(self.device)
+        self.critic_target = QNetwork(state_shape, action_shape, hidden_dim).to(self.device)
         # copy the NN parameters
         hard_update(self.critic_target, self.critic)
 
         # Policy(actor)
-        self.policy = Policy(state_shape, action_shape, args.hidden_dim,
+        self.policy = Policy(state_shape, action_shape, hidden_dim,
                              action_space).to(self.device)
-        self.policy_optim = Adam(self.policy.parameters(), lr=args.lr)
+        self.policy_optim = Adam(self.policy.parameters(), lr=lr)
 
     def sample_action(self, state):
         state = to_tensor(state).to(self.device).unsqueeze(0)

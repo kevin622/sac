@@ -102,7 +102,8 @@ def main():
     # Agent
     state_shape = env.observation_space.shape[0]
     action_shape = env.action_space.shape[0]
-    agent = SAC(args, state_shape, action_shape, env.action_space)
+    agent = SAC(args.gamma, args.tau, args.alpha, args.lr, args.cuda, args.target_update_interval,
+                args.hidden_dim, state_shape, action_shape, env.action_space)
 
     # Replay Buffer
     replay_buffer = ReplayBuffer(args.buffer_size, args.env_name)
