@@ -15,22 +15,6 @@ def weights_init_(m):
         torch.nn.init.constant_(m.bias, 0)
 
 
-class ValueNetwork(nn.Module):
-
-    def __init__(self, input_size, output_size=1):
-        super(ValueNetwork, self).__init__()
-        self.fc1 = nn.Linear(input_size, 256)
-        self.fc2 = nn.Linear(256, 256)
-        self.fc3 = nn.Linear(256, output_size)
-        self.apply(weights_init_)
-
-    def forward(self, x):
-        x = F.relu(self.fc1(x))
-        x = F.relu(self.fc2(x))
-        x = self.fc3(x)
-        return x
-
-
 class QNetwork(nn.Module):
 
     def __init__(self, num_state, num_action, hidden_dim):
