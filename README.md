@@ -51,7 +51,7 @@ usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G]
                [--hidden_dim N] [--num_grad_step N]
                [--target_update_interval N] [--start_step N] [--buffer_size N]
                [--cuda] [--wandb] [--wandb_id WANDB_ID]
-               [--wandb_project WANDB_PROJECT]
+               [--wandb_project WANDB_PROJECT] [--record_video]
 ```
 
 ### Meaning and default values of important options
@@ -60,6 +60,7 @@ usage: main.py [-h] [--env_name ENV_NAME] [--gamma G] [--tau G] [--lr G]
 - `--wandb`: Whether use Weight and Bias for logging(default: False)
 - `--wandb_id`: ID for wandb account(default: None)
 - `--wandb_project`: project name of wandb account(default: None)
+- `--record_video`: Save video in `video/` directory(made automatically) (default: False)
 
 
 When specifying GPU, use the environment variable `CUDA_VISIBLE_DEVICES`
@@ -69,7 +70,7 @@ CUDA_VISIBLE_DEVICES=1,2 python main.py
 ### Code Example
 
 ```bash
-$ CUDA_VISIBLE_DEVICES=1 python main.py --evn_name HalfCheetah-v2 --cuda --num_step 3000000
+$ CUDA_VISIBLE_DEVICES=1 python main.py --evn_name HalfCheetah-v2 --cuda --num_step 3000000 --record_video
 ```
 
 ## Results
